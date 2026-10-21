@@ -1,0 +1,119 @@
+{
+  "artifact": "artifacts/churn_pipeline.joblib",
+  "artifact_sha256": "3cb931c83f16dfcde2fef0e66dc3bf2970b4e9f7a68d303fbbe2f97d13f9fe9a",
+  "created_at": "2026-10-21T17:01:09+00:00",
+  "source": {
+    "url": "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/1fd6fd70906479be1712e64cfc0ea89f58466629/data/Telco-Customer-Churn.csv",
+    "file": "data/raw/telco.csv",
+    "sha256": "16320c9c1ec72448db59aa0a26a0b95401046bef5d02fd3aeb906448e3055e91"
+  },
+  "split": {
+    "seed": 42,
+    "ratios": "60/20/20 stratified on Churn",
+    "sizes": {
+      "train": 4225,
+      "valid": 1409,
+      "test": 1409
+    },
+    "allocation_file": "evidence/tp02/split_allocation.csv",
+    "allocation_sha256": "a981175e5fa0ef378bc7cea8b18f5db669157ad01a9f532239e30514bc791f16",
+    "test_set": "reserved, not used for training or selection"
+  },
+  "features": {
+    "numeric": [
+      "tenure",
+      "MonthlyCharges",
+      "TotalCharges"
+    ],
+    "categorical": [
+      "Contract",
+      "InternetService",
+      "PaymentMethod"
+    ],
+    "identifier_not_used": "customerID",
+    "target": "Churn"
+  },
+  "input_schema": {
+    "tenure": "float (blank allowed -> NaN)",
+    "MonthlyCharges": "float (blank allowed -> NaN)",
+    "TotalCharges": "float (blank allowed -> NaN)",
+    "Contract": "string category",
+    "InternetService": "string category",
+    "PaymentMethod": "string category"
+  },
+  "preprocessing": {
+    "numeric": {
+      "columns": [
+        "tenure",
+        "MonthlyCharges",
+        "TotalCharges"
+      ],
+      "imputer": "median (learned on training data only)",
+      "scaler": "StandardScaler (mean/std learned on training data only)"
+    },
+    "categorical": {
+      "columns": [
+        "Contract",
+        "InternetService",
+        "PaymentMethod"
+      ],
+      "imputer": "most_frequent (learned on training data only)",
+      "encoder": "OneHotEncoder(handle_unknown='ignore'): an unseen category is encoded as all zeros for that column, it does not raise"
+    }
+  },
+  "positive_class": "Churn = Yes (encoded 1)",
+  "threshold": 0.5,
+  "selection": {
+    "metric": "average_precision",
+    "data": "validation only",
+    "rule": "best average_precision; prefer simpler if within 0.005",
+    "selected_model": "random_forest"
+  },
+  "model_params": {
+    "bootstrap": true,
+    "ccp_alpha": 0.0,
+    "class_weight": null,
+    "criterion": "gini",
+    "max_depth": 8,
+    "max_features": "sqrt",
+    "max_leaf_nodes": null,
+    "max_samples": null,
+    "min_impurity_decrease": 0.0,
+    "min_samples_leaf": 10,
+    "min_samples_split": 2,
+    "min_weight_fraction_leaf": 0.0,
+    "monotonic_cst": null,
+    "n_estimators": 300,
+    "n_jobs": null,
+    "oob_score": false,
+    "random_state": 42,
+    "verbose": 0,
+    "warm_start": false
+  },
+  "validation_metrics": {
+    "average_precision": 0.6638999967251471,
+    "precision": 0.6534296028880866,
+    "recall": 0.4839572192513369,
+    "f1": 0.5560675883256528,
+    "accuracy": 0.794889992902768,
+    "cm_tn": 939,
+    "cm_fp": 96,
+    "cm_fn": 193,
+    "cm_tp": 181
+  },
+  "code": {
+    "commit": "96f745732fb4ed8078b0c1af0128bc439dc4c35b",
+    "uncommitted_changes": true
+  },
+  "environment": {
+    "python": "3.11.17",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "packages": {
+      "churnlab": "0.1.0",
+      "scikit-learn": "1.5.2",
+      "pandas": "2.2.3",
+      "numpy": "1.26.4",
+      "joblib": "1.6.0"
+    }
+  }
+}
