@@ -67,3 +67,70 @@ A file name is not a data version: only the hash identifies the bytes. Never ope
 ## What this dataset is not
 
 This is a **single customer snapshot**: one row per customer with their state at extraction time and whether they churned. It is **not** an event log with timestamps, so we cannot know the order in which things happened, and it is **not** an intervention or A/B dataset, so no retention action was randomly assigned. Models trained on it find associations, not causal effects of an action. No event history or treatment assignment should be invented and presented as observed IBM data.
+
+## TP02: training pipeline
+
+### Run it
+
+```sh
+uv sync --locked                      # on macOS add --no-editable (see note below)
+uv run python scripts/train.py        # split, first model, comparison, selection, artifact
+uv run python scripts/checks.py       # reliability checks -> evidence/tp02/checks.json
+uv run python scripts/predict.py --input evidence/tp02/inference_batch.csv   # inference only
+uv run pytest
+```
+
+`scripts/train.py --seed 42` is the single terminal entry point. The seed fixes the split and the tree-based models.
+
+### What the workflow does
+
+1. **Load and verify**: `churnlab.data.load_raw` checks the SHA-256 before reading the CSV. The file is never modified.
+2. **Split**: stratified 60/20/20 on `Churn`, seed 42 (4,225 / 1,409 / 1,409 customers). The allocation of every `customerID` is saved in `evidence/tp02/split_allocation.csv`. The **test set is reserved**: it is not used for training or model selection.
+3. **First model**: logistic regression on `tenure` and `MonthlyCharges`, plus a majority-class baseline, both fitted on train and evaluated on validation (`evidence/tp02/first_model.json`).
+4. **Pipeline**: `churnlab.pipeline.build_pipeline(classifier)` returns an **unfitted** `Pipeline(ColumnTransformer -> classifier)`. It never reads data.
+5. **Comparison**: baseline, logistic regression, decision tree and random forest, same six features, same split, same metrics (`evidence/tp02/comparison.csv`).
+6. **Selection and artifact**: the selected fitted pipeline (preprocessing + classifier together) is saved to `artifacts/churn_pipeline.joblib`, with its metadata in `artifacts/churn_pipeline.metadata.json` (copied to `evidence/tp02/model_metadata.json`).
+
+### Prediction task
+
+- Positive class: `Churn = Yes`, encoded as 1. Decision threshold: 0.5 on the class-1 probability.
+- `customerID` is kept only for identification and split checks. Neither `customerID` nor `Churn` is ever an input.
+
+### Input schema (inference)
+
+| Column | Type | Missing allowed? |
+|---|---|---|
+| `tenure`, `MonthlyCharges`, `TotalCharges` | number (or numeric text) | Yes: empty or whitespace-only becomes NaN, then imputed |
+| `Contract`, `InternetService`, `PaymentMethod` | text category | Yes, imputed; unseen categories are accepted |
+
+Boundary rules, applied by `churnlab.data.validate_features` before the pipeline, both at training and inference:
+- whitespace-only numbers become missing values; **any other non-numeric text raises an error** (`pd.to_numeric(errors="raise")`);
+- a missing required column raises a `KeyError`.
+
+### Preprocessing (learned on training data only)
+
+| Branch | Steps |
+|---|---|
+| Numeric | `SimpleImputer(median)` then `StandardScaler` |
+| Categorical | `SimpleImputer(most_frequent)` then `OneHotEncoder(handle_unknown="ignore")` |
+
+An unseen category (for example `InternetService = "Satellite"`) is encoded as all zeros for that column instead of crashing. This keeps the service running, but the prediction for such a customer is **not** reliable and should be monitored.
+
+### Model selection rule (fixed before looking at the results)
+
+Primary metric: **average precision** on validation, computed from class-1 probabilities. It focuses on how well the model ranks churners, it is threshold-independent and it is not inflated by the 73% majority class, unlike accuracy. If a simpler model is within 0.005 of the best, the simpler one is kept (logistic regression < decision tree < random forest). Precision, recall, F1, accuracy and the confusion matrix at threshold 0.5 are reported as supporting evidence.
+
+### Artifact
+
+`artifacts/` is ignored by Git. The fitted artifact is published as a GitHub release asset, and its SHA-256 is recorded in the metadata so a downloaded copy can be verified. Only load artifacts you trust: `joblib.load` can execute code. Load it with the library versions recorded in the metadata (scikit-learn 1.5.2).
+
+### macOS note
+
+On macOS the editable install file (`.pth`) can be marked hidden and ignored by Python, which gives `ModuleNotFoundError: churnlab`. Use `uv sync --locked --no-editable`. After changing code in `src/`, reinstall the package with `uv sync --locked --no-editable --reinstall-package churnlab`.
+
+### Known limitations
+
+- Probabilities are not calibrated: a score of 0.8 is not a verified 80% risk.
+- Fit durations are indicative, measured on one machine.
+- The test set has not been evaluated yet; it is kept for a single final evaluation.
+- No experiment tracking yet (next TP).
