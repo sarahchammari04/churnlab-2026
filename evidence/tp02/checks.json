@@ -1,0 +1,57 @@
+{
+  "1_disjoint_ids": {
+    "sizes": {
+      "train": 4225,
+      "valid": 1409,
+      "test": 1409
+    },
+    "train_valid": 0,
+    "train_test": 0,
+    "valid_test": 0,
+    "all_customers_allocated_once": 1
+  },
+  "2_training_only_statistics": {
+    "imputer_medians": {
+      "tenure": 29.0,
+      "MonthlyCharges": 70.55,
+      "TotalCharges": 1373.625
+    },
+    "training_medians": {
+      "tenure": 29.0,
+      "MonthlyCharges": 70.55,
+      "TotalCharges": 1373.625
+    },
+    "full_dataset_medians": {
+      "tenure": 29.0,
+      "MonthlyCharges": 70.35,
+      "TotalCharges": 1397.475
+    },
+    "imputer_matches_training": true,
+    "scaler_mean_matches_training": true
+  },
+  "3_predict_does_not_refit": {
+    "imputer_unchanged": true,
+    "scaler_unchanged": true
+  },
+  "4_policies": {
+    "missing_TotalCharges_imputed_to_training_median": true,
+    "missing_TotalCharges_score": 0.09471044466956721,
+    "unseen_category_encoded_as_zeros": true,
+    "unseen_category_score": 0.08612098977918152,
+    "note": "Handling an unseen category only avoids a crash; it does not make the prediction reliable."
+  },
+  "4b_malformed_numeric": "raised ValueError",
+  "5_missing_feature": {
+    "boundary": "raised KeyError: \"Missing required feature columns: ['Contract']\"",
+    "pipeline": "raised ValueError"
+  },
+  "6_fresh_process_reload": {
+    "rows": 20,
+    "max_abs_score_difference": 0.0,
+    "tolerance": 1e-09,
+    "scores_agree": true,
+    "classes_agree": true,
+    "inference_script_calls_fit": false,
+    "inference_input_contains_target": false
+  }
+}

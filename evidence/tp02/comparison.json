@@ -1,0 +1,58 @@
+[
+  {
+    "model":"majority_baseline",
+    "average_precision":0.2654364798,
+    "precision":0.0,
+    "recall":0.0,
+    "f1":0.0,
+    "accuracy":0.7345635202,
+    "cm_tn":1035,
+    "cm_fp":0,
+    "cm_fn":374,
+    "cm_tp":0,
+    "fit_seconds":0.005,
+    "config":"{\"constant\": null, \"random_state\": null, \"strategy\": \"most_frequent\"}"
+  },
+  {
+    "model":"logistic_regression",
+    "average_precision":0.6474664703,
+    "precision":0.6644295302,
+    "recall":0.5294117647,
+    "f1":0.5892857143,
+    "accuracy":0.8041163946,
+    "cm_tn":935,
+    "cm_fp":100,
+    "cm_fn":176,
+    "cm_tp":198,
+    "fit_seconds":0.007,
+    "config":"{\"C\": 1.0, \"class_weight\": null, \"dual\": false, \"fit_intercept\": true, \"intercept_scaling\": 1, \"l1_ratio\": null, \"max_iter\": 1000, \"multi_class\": \"deprecated\", \"n_jobs\": null, \"penalty\": \"l2\", \"random_state\": null, \"solver\": \"lbfgs\", \"tol\": 0.0001, \"verbose\": 0, \"warm_start\": false}"
+  },
+  {
+    "model":"decision_tree",
+    "average_precision":0.6173000162,
+    "precision":0.6355932203,
+    "recall":0.6016042781,
+    "f1":0.6181318681,
+    "accuracy":0.8026969482,
+    "cm_tn":906,
+    "cm_fp":129,
+    "cm_fn":149,
+    "cm_tp":225,
+    "fit_seconds":0.011,
+    "config":"{\"ccp_alpha\": 0.0, \"class_weight\": null, \"criterion\": \"gini\", \"max_depth\": 5, \"max_features\": null, \"max_leaf_nodes\": null, \"min_impurity_decrease\": 0.0, \"min_samples_leaf\": 20, \"min_samples_split\": 2, \"min_weight_fraction_leaf\": 0.0, \"monotonic_cst\": null, \"random_state\": 42, \"splitter\": \"best\"}"
+  },
+  {
+    "model":"random_forest",
+    "average_precision":0.6638999967,
+    "precision":0.6534296029,
+    "recall":0.4839572193,
+    "f1":0.5560675883,
+    "accuracy":0.7948899929,
+    "cm_tn":939,
+    "cm_fp":96,
+    "cm_fn":193,
+    "cm_tp":181,
+    "fit_seconds":0.441,
+    "config":"{\"bootstrap\": true, \"ccp_alpha\": 0.0, \"class_weight\": null, \"criterion\": \"gini\", \"max_depth\": 8, \"max_features\": \"sqrt\", \"max_leaf_nodes\": null, \"max_samples\": null, \"min_impurity_decrease\": 0.0, \"min_samples_leaf\": 10, \"min_samples_split\": 2, \"min_weight_fraction_leaf\": 0.0, \"monotonic_cst\": null, \"n_estimators\": 300, \"n_jobs\": null, \"oob_score\": false, \"random_state\": 42, \"verbose\": 0, \"warm_start\": false}"
+  }
+]

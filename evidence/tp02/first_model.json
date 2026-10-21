@@ -1,0 +1,34 @@
+{
+  "features": [
+    "tenure",
+    "MonthlyCharges"
+  ],
+  "positive_class": "Churn = Yes (1)",
+  "confusion_matrix_layout": "rows = true [0, 1], cols = predicted [0, 1]",
+  "majority_baseline": {
+    "average_precision": 0.2654364797728886,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "accuracy": 0.7345635202271115,
+    "confusion_matrix": {
+      "tn": 1035,
+      "fp": 0,
+      "fn": 374,
+      "tp": 0
+    }
+  },
+  "logistic_regression": {
+    "average_precision": 0.5985618744945995,
+    "precision": 0.6428571428571429,
+    "recall": 0.4090909090909091,
+    "f1": 0.5,
+    "accuracy": 0.7828246983676366,
+    "confusion_matrix": {
+      "tn": 950,
+      "fp": 85,
+      "fn": 221,
+      "tp": 153
+    }
+  }
+}
