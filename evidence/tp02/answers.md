@@ -1,8 +1,10 @@
 # TP02 answers
 
-**Student:** Sarah Chammari
+**Student:** Sarah Chammari and Shaima Kraiem
 **Entry point:** `uv run python scripts/train.py` (seed 42)
-**Code commit used for the artifact:** see `code.commit` in `model_metadata.json`
+**Code commit used for the artifact:** 96f7457
+**Pull request:** https://github.com/sarahchammari04/churnlab-2026/pull/2
+**Artifact:** https://github.com/sarahchammari04/churnlab-2026/releases/tag/tp02-model
 
 ## 1. First model (validation, positive class = Churn Yes = 1)
 
@@ -26,12 +28,12 @@ Features: `tenure`, `MonthlyCharges`. Confusion matrix layout: rows = true [0, 1
 
 ## 3. Comparison (validation, six features, same split)
 
-| Model | Avg precision | Precision | Recall | F1 | Accuracy | Fit (s) |
-|---|---:|---:|---:|---:|---:|---:|
-| Majority baseline | 0.265 | 0.000 | 0.000 | 0.000 | 0.735 | ~0.01 |
-| Logistic regression | 0.647 | 0.664 | 0.529 | 0.589 | 0.804 | ~0.3 |
-| Decision tree (depth 5) | 0.617 | 0.636 | 0.602 | 0.618 | 0.803 | ~0.02 |
-| Random forest (300 trees, depth 8) | **0.664** | 0.653 | 0.484 | 0.556 | 0.795 | ~0.9 |
+| Model | Avg precision | Precision | Recall | F1 | Accuracy | TN | FP | FN | TP | Fit (s) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Majority baseline | 0.265 | 0.000 | 0.000 | 0.000 | 0.735 | 1035 | 0 | 374 | 0 | 0.005 |
+| Logistic regression | 0.647 | 0.664 | 0.529 | 0.589 | 0.804 | 935 | 100 | 176 | 198 | 0.007 |
+| Decision tree (depth 5) | 0.617 | 0.636 | 0.602 | 0.618 | 0.803 | 906 | 129 | 149 | 225 | 0.011 |
+| Random forest (300 trees, depth 8) | **0.664** | 0.653 | 0.484 | 0.556 | 0.795 | 939 | 96 | 193 | 181 | 0.441 |
 
 Full table with confusion matrices and configurations: `comparison.csv`.
 
@@ -68,6 +70,5 @@ Remarks:
 
 ## Peer review
 
-- Reviewer: <NAME>
-- Issue found: <ISSUE>
-- Resolution: <RESOLUTION>
+- Reviewer: Sarah and Shaima
+- Issue found: none blocking; reproduced train.py and predict.py from the README with identical validation metrics.
