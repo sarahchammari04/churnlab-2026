@@ -1,0 +1,24 @@
+# Python environments
+.venv/
+.venv-backup/
+.venv-backup-*/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets
+.env
+
+# Raw data and generated outputs (provenance is tracked via telco.source.json)
+data/raw/telco.csv
+data/processed/*
+!data/processed/.gitkeep
+artifacts/*
+!artifacts/.gitkeep
+reports/
+mlruns/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
