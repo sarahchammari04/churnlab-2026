@@ -1,0 +1,13 @@
+$ git commit -m "Add persistence tests (save/reload agreement)"
+ruff check...............................................................Passed
+ruff format..............................................................Failed
+- hook id: ruff-format
+- files were modified by this hook
+
+1 file reformatted
+
+trim trailing whitespace.................................................Passed
+fix end of files.........................................................Passed
+check yaml...........................................(no files to check)Skipped
+check toml...........................................(no files to check)Skipped
+exit code: 1

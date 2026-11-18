@@ -1,0 +1,13 @@
+diff --git a/src/churnlab/pipeline.py b/src/churnlab/pipeline.py
+index e155051..45e35af 100644
+--- a/src/churnlab/pipeline.py
++++ b/src/churnlab/pipeline.py
+@@ -30,7 +30,7 @@ def build_preprocessor() -> ColumnTransformer:
+     ])
+     categorical = Pipeline([
+         ("imputer", SimpleImputer(strategy="most_frequent")),
+-        ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
++        ("encoder", OneHotEncoder(handle_unknown="error", sparse_output=False)),
+     ])
+     return ColumnTransformer([
+         ("num", numeric, NUMERIC_FEATURES),

@@ -1,0 +1,858 @@
+unformatted: File would be reformatted
+   --> scripts/checks.py:17:26
+    |
+16  | from churnlab.data import (
+    -     CATEGORICAL_FEATURES, FEATURES, ID_COLUMN, NUMERIC_FEATURES, load_raw, validate_features,
+17  +     CATEGORICAL_FEATURES,
+18  +     FEATURES,
+19  +     ID_COLUMN,
+20  +     NUMERIC_FEATURES,
+21  +     load_raw,
+22  +     validate_features,
+23  | )
+--------------------------------------------------------------------------------
+71  | # 4. Documented policies: missing numeric value and unseen category
+    - base = raw[raw[ID_COLUMN].isin(groups["valid"])][FEATURES].head(1).astype(str).reset_index(drop=True)
+    - missing_num = base.copy(); missing_num.loc[0, "TotalCharges"] = " "
+    - unseen_cat = base.copy(); unseen_cat.loc[0, "InternetService"] = "Satellite"
+72  + base = (
+73  +     raw[raw[ID_COLUMN].isin(groups["valid"])][FEATURES].head(1).astype(str).reset_index(drop=True)
+74  + )
+75  + missing_num = base.copy()
+76  + missing_num.loc[0, "TotalCharges"] = " "
+77  + unseen_cat = base.copy()
+78  + unseen_cat.loc[0, "InternetService"] = "Satellite"
+79  | pre = pipe.named_steps["preprocessor"]
+--------------------------------------------------------------------------------
+86  | results["4_policies"] = {
+    -     "missing_TotalCharges_imputed_to_training_median": bool(np.isclose(
+    -         row_missing[2] * num.named_steps["scaler"].scale_[2] + scaler_mean[2], imputer_stats[2])),
+87  +     "missing_TotalCharges_imputed_to_training_median": bool(
+88  +         np.isclose(
+89  +             row_missing[2] * num.named_steps["scaler"].scale_[2] + scaler_mean[2], imputer_stats[2]
+90  +         )
+91  +     ),
+92  |     "missing_TotalCharges_score": float(pipe.predict_proba(validate_features(missing_num))[0, 1]),
+    -     "unseen_category_encoded_as_zeros": bool(np.all(row_unseen[start:start + width] == 0)),
+93  +     "unseen_category_encoded_as_zeros": bool(np.all(row_unseen[start : start + width] == 0)),
+94  |     "unseen_category_score": float(pipe.predict_proba(validate_features(unseen_cat))[0, 1]),
+--------------------------------------------------------------------------------
+98  | # 4b. Malformed non-blank numeric text must fail
+    - bad = base.copy(); bad.loc[0, "MonthlyCharges"] = "abc"
+99  + bad = base.copy()
+100 + bad.loc[0, "MonthlyCharges"] = "abc"
+101 | try:
+    -     validate_features(bad); results["4b_malformed_numeric"] = "NOT DETECTED"
+102 +     validate_features(bad)
+103 +     results["4b_malformed_numeric"] = "NOT DETECTED"
+104 | except (ValueError, TypeError) as e:
+--------------------------------------------------------------------------------
+110 | try:
+    -     validate_features(dropped); out5["boundary"] = "NOT DETECTED"
+111 +     validate_features(dropped)
+112 +     out5["boundary"] = "NOT DETECTED"
+113 | except KeyError as e:
+114 |     out5["boundary"] = f"raised KeyError: {e}"
+115 | try:
+    -     pipe.predict(validate_features(base).drop(columns=["Contract"])); out5["pipeline"] = "NOT DETECTED"
+116 +     pipe.predict(validate_features(base).drop(columns=["Contract"]))
+117 +     out5["pipeline"] = "NOT DETECTED"
+118 | except (KeyError, ValueError) as e:
+--------------------------------------------------------------------------------
+123 | pred_path = Path("reports/reload_check_predictions.csv")
+    - subprocess.run([sys.executable, "scripts/predict.py", "--input", str(EVIDENCE / "inference_batch.csv"),
+    -                 "--output", str(pred_path)], check=True, capture_output=True)
+124 + subprocess.run(
+125 +     [
+126 +         sys.executable,
+127 +         "scripts/predict.py",
+128 +         "--input",
+129 +         str(EVIDENCE / "inference_batch.csv"),
+130 +         "--output",
+131 +         str(pred_path),
+132 +     ],
+133 +     check=True,
+134 +     capture_output=True,
+135 + )
+136 | ref = pd.read_csv(EVIDENCE / "reference_predictions.csv")
+--------------------------------------------------------------------------------
+144 |     "scores_agree": max_diff <= TOL,
+    -     "classes_agree": bool((ref["prediction"].to_numpy() == new["churn_prediction"].to_numpy()).all()),
+145 +     "classes_agree": bool(
+146 +         (ref["prediction"].to_numpy() == new["churn_prediction"].to_numpy()).all()
+147 +     ),
+148 |     "inference_script_calls_fit": ".fit(" in predict_src,
+    -     "inference_input_contains_target": "Churn" in pd.read_csv(EVIDENCE / "inference_batch.csv").columns,
+149 +     "inference_input_contains_target": "Churn"
+150 +     in pd.read_csv(EVIDENCE / "inference_batch.csv").columns,
+151 | }
+    |
+
+unformatted: File would be reformatted
+  --> scripts/inspect_telco.py:8:19
+   |
+7  | source = Path("data/raw/telco.csv")
+   - expected_sha256 = (
+   -     "16320c9c1ec72448db59aa0a26a0b95401046bef5d02fd3aeb906448e3055e91"
+   - )
+8  + expected_sha256 = "16320c9c1ec72448db59aa0a26a0b95401046bef5d02fd3aeb906448e3055e91"
+9  |
+--------------------------------------------------------------------------------
+20 | target_counts = df["Churn"].value_counts(dropna=False)
+   - blank_total_charges = (
+   -     df["TotalCharges"].astype("string").str.strip().eq("").sum()
+   - )
+21 + blank_total_charges = df["TotalCharges"].astype("string").str.strip().eq("").sum()
+22 |
+--------------------------------------------------------------------------------
+28 |     "target_counts": {str(k): int(v) for k, v in target_counts.items()},
+   -     "target_rates": {
+   -         str(k): float(v / len(df)) for k, v in target_counts.items()
+   -     },
+29 +     "target_rates": {str(k): float(v / len(df)) for k, v in target_counts.items()},
+30 |     "duplicate_customer_ids": int(df["customerID"].duplicated().sum()),
+   |
+
+unformatted: File would be reformatted
+  --> scripts/predict_registered.py:43:20
+   |
+42 | scores = pipeline.predict_proba(X)[:, list(pipeline.classes_).index(1)]
+   - out = pd.DataFrame({
+   -     ID_COLUMN: raw[ID_COLUMN] if ID_COLUMN in raw else range(len(raw)),
+   -     "churn_score": scores,
+   -     "churn_prediction": (scores >= args.threshold).astype(int),
+   - })
+43 + out = pd.DataFrame(
+44 +     {
+45 +         ID_COLUMN: raw[ID_COLUMN] if ID_COLUMN in raw else range(len(raw)),
+46 +         "churn_score": scores,
+47 +         "churn_prediction": (scores >= args.threshold).astype(int),
+48 +     }
+49 + )
+50 | args.output.parent.mkdir(parents=True, exist_ok=True)
+--------------------------------------------------------------------------------
+58 |     ok = classes_agree and max_diff <= args.tol
+   -     print(f"\nRows: {len(ref)} | classes agree: {classes_agree} | "
+   -           f"max |score diff|: {max_diff:.3e} (tolerance {args.tol:g}) -> {'AGREEMENT OK' if ok else 'MISMATCH'}")
+59 +     print(
+60 +         f"\nRows: {len(ref)} | classes agree: {classes_agree} | "
+61 +         f"max |score diff|: {max_diff:.3e} (tolerance {args.tol:g}) -> {'AGREEMENT OK' if ok else 'MISMATCH'}"
+62 +     )
+63 |     sys.exit(0 if ok else 1)
+   |
+
+unformatted: File would be reformatted
+  --> scripts/record_environment.py:12:18
+   |
+11 |     "uv": subprocess.check_output(["uv", "--version"], text=True).strip(),
+   -     "packages": {
+   -         name: version(name)
+   -         for name in ["churnlab", "pandas", "numpy", "scikit-learn"]
+   -     },
+12 +     "packages": {name: version(name) for name in ["churnlab", "pandas", "numpy", "scikit-learn"]},
+13 | }
+   |
+
+unformatted: File would be reformatted
+  --> scripts/tracking_status.py:21:27
+   |
+20 |
+   - runs = mlflow.search_runs(experiment_names=[EXPERIMENT_NAME],
+   -                           order_by=["metrics.val_average_precision DESC"])
+21 + runs = mlflow.search_runs(
+22 +     experiment_names=[EXPERIMENT_NAME], order_by=["metrics.val_average_precision DESC"]
+23 + )
+24 | tracked = runs[runs["tags.run_role"].isin(["candidate", "baseline"])]
+25 | print(f"Experiment '{EXPERIMENT_NAME}': {len(runs)} runs ({len(tracked)} candidate/baseline)")
+26 |
+   - cols = ["run_id", "tags.mlflow.runName", "metrics.val_average_precision",
+   -         "metrics.val_precision", "metrics.val_recall", "metrics.val_f1"]
+27 + cols = [
+28 +     "run_id",
+29 +     "tags.mlflow.runName",
+30 +     "metrics.val_average_precision",
+31 +     "metrics.val_precision",
+32 +     "metrics.val_recall",
+33 +     "metrics.val_f1",
+34 + ]
+35 | print(tracked[cols].to_string(index=False))
+--------------------------------------------------------------------------------
+40 | versions = client.search_model_versions(f"name='{REGISTERED_MODEL}'")
+   - print(f"\nRegistered model '{REGISTERED_MODEL}': versions {sorted(int(v.version) for v in versions)}")
+41 + print(
+42 +     f"\nRegistered model '{REGISTERED_MODEL}': versions {sorted(int(v.version) for v in versions)}"
+43 + )
+44 | mv = client.get_model_version_by_alias(REGISTERED_MODEL, ALIAS)
+   |
+
+unformatted: File would be reformatted
+  --> scripts/train.py:22:11
+   |
+21 |     m = fm[name]
+   -     print(f"{name:22s} accuracy={m['accuracy']:.3f} recall={m['recall']:.3f} cm={m['confusion_matrix']}")
+22 +     print(
+23 +         f"{name:22s} accuracy={m['accuracy']:.3f} recall={m['recall']:.3f} cm={m['confusion_matrix']}"
+24 +     )
+25 |
+26 | print("\n== Comparison: six features, validation ==")
+   - cols = ["model", "average_precision", "precision", "recall", "f1", "accuracy",
+   -         "cm_tn", "cm_fp", "cm_fn", "cm_tp", "fit_seconds"]
+27 + cols = [
+28 +     "model",
+29 +     "average_precision",
+30 +     "precision",
+31 +     "recall",
+32 +     "f1",
+33 +     "accuracy",
+34 +     "cm_tn",
+35 +     "cm_fp",
+36 +     "cm_fn",
+37 +     "cm_tp",
+38 +     "fit_seconds",
+39 + ]
+40 | with pd.option_context("display.width", 200, "display.float_format", "{:.3f}".format):
+   |
+
+unformatted: File would be reformatted
+   --> scripts/train_tracked.py:17:26
+    |
+16  | from churnlab.data import (
+    -     CATEGORICAL_FEATURES, FEATURES, ID_COLUMN, NUMERIC_FEATURES, POSITIVE_LABEL, RAW_CSV,
+    -     SOURCE_URL, TARGET, encode_target, load_raw, sha256_of, validate_features,
+17  +     CATEGORICAL_FEATURES,
+18  +     FEATURES,
+19  +     ID_COLUMN,
+20  +     NUMERIC_FEATURES,
+21  +     POSITIVE_LABEL,
+22  +     RAW_CSV,
+23  +     SOURCE_URL,
+24  +     TARGET,
+25  +     encode_target,
+26  +     load_raw,
+27  +     sha256_of,
+28  +     validate_features,
+29  | )
+--------------------------------------------------------------------------------
+33  | from churnlab.tracking import (
+    -     ALIAS, EXPERIMENT_NAME, REGISTERED_MODEL, TRACKING_URI, connect, dataset_records,
+    -     register_selected, track_candidate, write_json,
+34  +     ALIAS,
+35  +     EXPERIMENT_NAME,
+36  +     REGISTERED_MODEL,
+37  +     TRACKING_URI,
+38  +     connect,
+39  +     dataset_records,
+40  +     register_selected,
+41  +     track_candidate,
+42  +     write_json,
+43  | )
+44  | from churnlab.train import (
+    -     COMPLEXITY_ORDER, SELECTION_METRIC, SIMPLER_MARGIN, candidate_models, environment_identity,
+    -     git_identity, select,
+45  +     COMPLEXITY_ORDER,
+46  +     SELECTION_METRIC,
+47  +     SIMPLER_MARGIN,
+48  +     candidate_models,
+49  +     environment_identity,
+50  +     git_identity,
+51  +     select,
+52  | )
+--------------------------------------------------------------------------------
+96  | if git["uncommitted_changes"]:
+    -     print("WARNING: uncommitted changes present; the commit ID alone does not describe the code run.")
+97  +     print(
+98  +         "WARNING: uncommitted changes present; the commit ID alone does not describe the code run."
+99  +     )
+100 |
+--------------------------------------------------------------------------------
+109 |     "split": {
+    -         "seed": args.seed, "ratios": "60/20/20 stratified on Churn",
+110 +         "seed": args.seed,
+111 +         "ratios": "60/20/20 stratified on Churn",
+112 |         "sizes": {"train": len(train_df), "valid": len(valid_df), "test": len(test_df)},
+    -         "allocation_file": TP02_ALLOCATION.as_posix(), "allocation_sha256": allocation_sha256,
+113 +         "allocation_file": TP02_ALLOCATION.as_posix(),
+114 +         "allocation_sha256": allocation_sha256,
+115 |         "test_set": "reserved, not used for training or selection",
+116 |     },
+    -     "features": {"numeric": NUMERIC_FEATURES, "categorical": CATEGORICAL_FEATURES,
+    -                  "excluded": [ID_COLUMN, TARGET]},
+117 +     "features": {
+118 +         "numeric": NUMERIC_FEATURES,
+119 +         "categorical": CATEGORICAL_FEATURES,
+120 +         "excluded": [ID_COLUMN, TARGET],
+121 +     },
+122 |     "class_mapping": {"No": 0, "Yes": 1, "positive_class": f"{TARGET} = {POSITIVE_LABEL} (1)"},
+--------------------------------------------------------------------------------
+126 |         "primary_metric": "val_average_precision (continuous class-1 scores, column found via classes_)",
+    -         "threshold_metrics": {"threshold": THRESHOLD, "metrics": ["precision", "recall", "f1", "accuracy"]},
+127 +         "threshold_metrics": {
+128 +             "threshold": THRESHOLD,
+129 +             "metrics": ["precision", "recall", "f1", "accuracy"],
+130 +         },
+131 |         "confusion_matrix_layout": "rows = true [0, 1], cols = predicted [0, 1]",
+132 |     },
+133 |     "selection_rule": f"best validation {SELECTION_METRIC}; prefer simpler model if within "
+    -                       f"{SIMPLER_MARGIN} (order: {' < '.join(COMPLEXITY_ORDER)})",
+134 +     f"{SIMPLER_MARGIN} (order: {' < '.join(COMPLEXITY_ORDER)})",
+135 |     "code": git,
+--------------------------------------------------------------------------------
+139 | # --- One run per candidate ------------------------------------------------
+    - data = {"X_train": X_train, "y_train": y_train, "X_valid": X_valid, "y_valid": y_valid,
+    -         "train_dataset": train_dataset, "valid_dataset": valid_dataset}
+140 + data = {
+141 +     "X_train": X_train,
+142 +     "y_train": y_train,
+143 +     "X_valid": X_valid,
+144 +     "y_valid": y_valid,
+145 +     "train_dataset": train_dataset,
+146 +     "valid_dataset": valid_dataset,
+147 + }
+148 | results = []
+149 | for key, classifier in candidate_models(args.seed).items():
+150 |     role = "baseline" if key == "majority_baseline" else "candidate"
+    -     res = track_candidate(RUN_NAMES[key], key, classifier, data,
+    -                           {"seed": args.seed, "tags": tags, "provenance": provenance, "run_role": role})
+151 +     res = track_candidate(
+152 +         RUN_NAMES[key],
+153 +         key,
+154 +         classifier,
+155 +         data,
+156 +         {"seed": args.seed, "tags": tags, "provenance": provenance, "run_role": role},
+157 +     )
+158 |     results.append(res)
+    -     print(f"{res['run_name']:24s} run_id={res['run_id']}  AP={res['val_average_precision']:.4f}  "
+    -           f"recall={res['val_recall']:.4f}  F1={res['val_f1']:.4f}")
+159 +     print(
+160 +         f"{res['run_name']:24s} run_id={res['run_id']}  AP={res['val_average_precision']:.4f}  "
+161 +         f"recall={res['val_recall']:.4f}  F1={res['val_f1']:.4f}"
+162 +     )
+163 |
+164 | # --- Selection with the rule fixed in TP02 --------------------------------
+    - selected_key = select([{"model": r["model"], SELECTION_METRIC: r["val_average_precision"]} for r in results])
+165 + selected_key = select(
+166 +     [{"model": r["model"], SELECTION_METRIC: r["val_average_precision"]} for r in results]
+167 + )
+168 | selected = next(r for r in results if r["model"] == selected_key)
+--------------------------------------------------------------------------------
+178 | X_batch = validate_features(batch)
+    - pd.DataFrame({
+    -     ID_COLUMN: batch[ID_COLUMN].values,
+    -     "score": positive_scores(selected["pipeline"], X_batch),
+    -     "prediction": selected["pipeline"].predict(X_batch),
+    - }).to_csv(args.evidence_dir / "reference_predictions.csv", index=False)
+179 + pd.DataFrame(
+180 +     {
+181 +         ID_COLUMN: batch[ID_COLUMN].values,
+182 +         "score": positive_scores(selected["pipeline"], X_batch),
+183 +         "prediction": selected["pipeline"].predict(X_batch),
+184 +     }
+185 + ).to_csv(args.evidence_dir / "reference_predictions.csv", index=False)
+186 |
+--------------------------------------------------------------------------------
+202 | if not args.no_register:
+    -     version = register_selected(selected["model_uri"], version_tags={
+    -         "source_run_id": selected["run_id"], "selection_metric": "val_average_precision",
+    -         "data_sha256": data_sha256, "git_commit": git["commit"],
+    -     })
+203 +     version = register_selected(
+204 +         selected["model_uri"],
+205 +         version_tags={
+206 +             "source_run_id": selected["run_id"],
+207 +             "selection_metric": "val_average_precision",
+208 +             "data_sha256": data_sha256,
+209 +             "git_commit": git["commit"],
+210 +         },
+211 +     )
+212 |     resolved = mlflow.MlflowClient().get_model_version_by_alias(REGISTERED_MODEL, ALIAS)
+    -     handover |= {"registered_model": REGISTERED_MODEL, "registered_version": version.version,
+    -                  "alias": ALIAS, "alias_resolves_to": resolved.version}
+213 +     handover |= {
+214 +         "registered_model": REGISTERED_MODEL,
+215 +         "registered_version": version.version,
+216 +         "alias": ALIAS,
+217 +         "alias_resolves_to": resolved.version,
+218 +     }
+219 |
+    |
+
+unformatted: File would be reformatted
+  --> src/churnlab/pipeline.py:27:24
+   |
+26 | def build_preprocessor() -> ColumnTransformer:
+   -     numeric = Pipeline([
+   -         ("imputer", SimpleImputer(strategy="median")),
+   -         ("scaler", StandardScaler()),
+   -     ])
+   -     categorical = Pipeline([
+   -         ("imputer", SimpleImputer(strategy="most_frequent")),
+   -         ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+   -     ])
+   -     return ColumnTransformer([
+   -         ("num", numeric, NUMERIC_FEATURES),
+   -         ("cat", categorical, CATEGORICAL_FEATURES),
+   -     ])
+27 +     numeric = Pipeline(
+28 +         [
+29 +             ("imputer", SimpleImputer(strategy="median")),
+30 +             ("scaler", StandardScaler()),
+31 +         ]
+32 +     )
+33 +     categorical = Pipeline(
+34 +         [
+35 +             ("imputer", SimpleImputer(strategy="most_frequent")),
+36 +             ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+37 +         ]
+38 +     )
+39 +     return ColumnTransformer(
+40 +         [
+41 +             ("num", numeric, NUMERIC_FEATURES),
+42 +             ("cat", categorical, CATEGORICAL_FEATURES),
+43 +         ]
+44 +     )
+45 |
+46 |
+47 | def build_pipeline(classifier) -> Pipeline:
+48 |     """Fresh preprocessing + the given (unfitted) classifier."""
+   -     return Pipeline([
+   -         ("preprocessor", build_preprocessor()),
+   -         ("classifier", classifier),
+   -     ])
+49 +     return Pipeline(
+50 +         [
+51 +             ("preprocessor", build_preprocessor()),
+52 +             ("classifier", classifier),
+53 +         ]
+54 +     )
+   |
+
+unformatted: File would be reformatted
+  --> src/churnlab/predict.py:21:25
+   |
+20 |     ids = raw[ID_COLUMN].to_numpy() if ID_COLUMN in raw.columns else range(len(raw))
+   -     return pd.DataFrame({
+   -         ID_COLUMN: ids,
+   -         "churn_score": scores,
+   -         "churn_prediction": (scores >= threshold).astype(int),
+   -     })
+21 +     return pd.DataFrame(
+22 +         {
+23 +             ID_COLUMN: ids,
+24 +             "churn_score": scores,
+25 +             "churn_prediction": (scores >= threshold).astype(int),
+26 +         }
+27 +     )
+   |
+
+unformatted: File would be reformatted
+   --> src/churnlab/tracking.py:53:37
+    |
+52  |     cols = FEATURES + [TARGET]
+    -     train = mlflow.data.from_pandas(train_df[cols], source=source, name="telco_train", targets=TARGET)
+    -     valid = mlflow.data.from_pandas(valid_df[cols], source=source, name="telco_validation", targets=TARGET)
+53  +     train = mlflow.data.from_pandas(
+54  +         train_df[cols], source=source, name="telco_train", targets=TARGET
+55  +     )
+56  +     valid = mlflow.data.from_pandas(
+57  +         valid_df[cols], source=source, name="telco_validation", targets=TARGET
+58  +     )
+59  |     return train, valid
+--------------------------------------------------------------------------------
+65  |     fig, ax = plt.subplots(figsize=(4.2, 4))
+    -     ConfusionMatrixDisplay(matrix, display_labels=["0: No churn", "1: Churn"]).plot(ax=ax, colorbar=False)
+66  +     ConfusionMatrixDisplay(matrix, display_labels=["0: No churn", "1: Churn"]).plot(
+67  +         ax=ax, colorbar=False
+68  +     )
+69  |     ax.set_title(title, fontsize=10)
+--------------------------------------------------------------------------------
+78  |     # MLflow params are strings: None and objects are written explicitly.
+    -     return "None" if value is None else value if isinstance(value, (int, float, str, bool)) else str(value)
+79  +     return (
+80  +         "None"
+81  +         if value is None
+82  +         else value
+83  +         if isinstance(value, (int, float, str, bool))
+84  +         else str(value)
+85  +     )
+86  |
+--------------------------------------------------------------------------------
+97  |     with mlflow.start_run(run_name=run_name) as run:
+    -         mlflow.log_params({
+    -             "model_key": model_key,
+    -             "model_type": type(classifier).__name__,
+    -             "split_seed": context["seed"],
+    -             "threshold": THRESHOLD,
+    -             "selection_metric": "val_average_precision",
+    -             **{f"clf.{k}": _param_value(v) for k, v in actual_params.items()},
+    -         })
+98  +         mlflow.log_params(
+99  +             {
+100 +                 "model_key": model_key,
+101 +                 "model_type": type(classifier).__name__,
+102 +                 "split_seed": context["seed"],
+103 +                 "threshold": THRESHOLD,
+104 +                 "selection_metric": "val_average_precision",
+105 +                 **{f"clf.{k}": _param_value(v) for k, v in actual_params.items()},
+106 +             }
+107 +         )
+108 |         mlflow.set_tags({**context["tags"], "run_role": context["run_role"]})
+--------------------------------------------------------------------------------
+124 |         with tempfile.TemporaryDirectory() as tmp:
+    -             png = _confusion_matrix_png(cm, f"{run_name} - validation (threshold {THRESHOLD})", Path(tmp))
+125 +             png = _confusion_matrix_png(
+126 +                 cm, f"{run_name} - validation (threshold {THRESHOLD})", Path(tmp)
+127 +             )
+128 |             mlflow.log_artifact(str(png), artifact_path="evaluation")
+129 |         mlflow.log_dict(
+    -             {**context["provenance"],
+    -              "candidate": {"run_name": run_name, "model_key": model_key,
+    -                            "model_type": type(classifier).__name__,
+    -                            "params": {k: _param_value(v) for k, v in actual_params.items()}},
+    -              "validation_confusion_matrix": {**cm, "layout": "rows = true [0, 1], cols = predicted [0, 1]"}},
+130 +             {
+131 +                 **context["provenance"],
+132 +                 "candidate": {
+133 +                     "run_name": run_name,
+134 +                     "model_key": model_key,
+135 +                     "model_type": type(classifier).__name__,
+136 +                     "params": {k: _param_value(v) for k, v in actual_params.items()},
+137 +                 },
+138 +                 "validation_confusion_matrix": {
+139 +                     **cm,
+140 +                     "layout": "rows = true [0, 1], cols = predicted [0, 1]",
+141 +                 },
+142 +             },
+143 |             "provenance.json",
+--------------------------------------------------------------------------------
+165 |
+    - def register_selected(model_uri: str, name: str = REGISTERED_MODEL, alias: str = ALIAS,
+    -                       version_tags: dict | None = None):
+166 + def register_selected(
+167 +     model_uri: str,
+168 +     name: str = REGISTERED_MODEL,
+169 +     alias: str = ALIAS,
+170 +     version_tags: dict | None = None,
+171 + ):
+172 |     """Register a logged model and point the alias at the returned version."""
+    |
+
+unformatted: File would be reformatted
+   --> src/churnlab/train.py:62:42
+    |
+61  |     try:
+    -         commit = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL).strip()
+    -         dirty = bool(subprocess.check_output(["git", "status", "--porcelain"], text=True, stderr=subprocess.DEVNULL).strip())
+62  +         commit = subprocess.check_output(
+63  +             ["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL
+64  +         ).strip()
+65  +         dirty = bool(
+66  +             subprocess.check_output(
+67  +                 ["git", "status", "--porcelain"], text=True, stderr=subprocess.DEVNULL
+68  +             ).strip()
+69  +         )
+70  |     except (OSError, subprocess.CalledProcessError):
+--------------------------------------------------------------------------------
+90  |     y_train, y_valid = encode_target(train_df[TARGET]), encode_target(valid_df[TARGET])
+    -     out = {"features": feats, "positive_class": "Churn = Yes (1)",
+    -            "confusion_matrix_layout": "rows = true [0, 1], cols = predicted [0, 1]"}
+91  +     out = {
+92  +         "features": feats,
+93  +         "positive_class": "Churn = Yes (1)",
+94  +         "confusion_matrix_layout": "rows = true [0, 1], cols = predicted [0, 1]",
+95  +     }
+96  |     for name, clf in [
+--------------------------------------------------------------------------------
+114 |
+    - def run(seed: int = SPLIT_SEED, artifacts_dir: Path = Path("artifacts"),
+    -         evidence_dir: Path = Path("evidence/tp02")) -> dict:
+115 + def run(
+116 +     seed: int = SPLIT_SEED,
+117 +     artifacts_dir: Path = Path("artifacts"),
+118 +     evidence_dir: Path = Path("evidence/tp02"),
+119 + ) -> dict:
+120 |     artifacts_dir.mkdir(parents=True, exist_ok=True)
+--------------------------------------------------------------------------------
+147 |         cm = metrics.pop("confusion_matrix")
+    -         results.append({
+    -             "model": name,
+    -             **metrics,
+    -             **{f"cm_{k}": v for k, v in cm.items()},
+    -             "fit_seconds": round(fit_seconds, 3),
+    -             "config": json.dumps({k: v for k, v in clf.get_params().items()}, default=str),
+    -         })
+148 +         results.append(
+149 +             {
+150 +                 "model": name,
+151 +                 **metrics,
+152 +                 **{f"cm_{k}": v for k, v in cm.items()},
+153 +                 "fit_seconds": round(fit_seconds, 3),
+154 +                 "config": json.dumps({k: v for k, v in clf.get_params().items()}, default=str),
+155 +             }
+156 +         )
+157 |         fitted[name] = pipe
+158 |
+159 |     table = pd.DataFrame(results)
+160 |     table.to_csv(evidence_dir / "comparison.csv", index=False)
+    -     (evidence_dir / "comparison.json").write_text(table.to_json(orient="records", indent=2), encoding="utf-8")
+161 +     (evidence_dir / "comparison.json").write_text(
+162 +         table.to_json(orient="records", indent=2), encoding="utf-8"
+163 +     )
+164 |
+--------------------------------------------------------------------------------
+172 |     batch.to_csv(evidence_dir / "inference_batch.csv", index=False)
+    -     ref = pd.DataFrame({
+    -         ID_COLUMN: batch[ID_COLUMN].values,
+    -         "score": selected.predict_proba(validate_features(batch))[:, list(selected.classes_).index(1)],
+    -         "prediction": selected.predict(validate_features(batch)),
+    -     })
+173 +     ref = pd.DataFrame(
+174 +         {
+175 +             ID_COLUMN: batch[ID_COLUMN].values,
+176 +             "score": selected.predict_proba(validate_features(batch))[
+177 +                 :, list(selected.classes_).index(1)
+178 +             ],
+179 +             "prediction": selected.predict(validate_features(batch)),
+180 +         }
+181 +     )
+182 |     ref.to_csv(evidence_dir / "reference_predictions.csv", index=False)
+--------------------------------------------------------------------------------
+190 |         "split": {
+    -             "seed": seed, "ratios": "60/20/20 stratified on Churn",
+191 +             "seed": seed,
+192 +             "ratios": "60/20/20 stratified on Churn",
+193 |             "sizes": {"train": len(train_df), "valid": len(valid_df), "test": len(test_df)},
+--------------------------------------------------------------------------------
+197 |         },
+    -         "features": {"numeric": NUMERIC_FEATURES, "categorical": CATEGORICAL_FEATURES,
+    -                      "identifier_not_used": ID_COLUMN, "target": TARGET},
+198 +         "features": {
+199 +             "numeric": NUMERIC_FEATURES,
+200 +             "categorical": CATEGORICAL_FEATURES,
+201 +             "identifier_not_used": ID_COLUMN,
+202 +             "target": TARGET,
+203 +         },
+204 |         "input_schema": {c: "float (blank allowed -> NaN)" for c in NUMERIC_FEATURES}
+    -                         | {c: "string category" for c in CATEGORICAL_FEATURES},
+205 +         | {c: "string category" for c in CATEGORICAL_FEATURES},
+206 |         "preprocessing": PREPROCESSING,
+207 |         "positive_class": f"{TARGET} = {POSITIVE_LABEL} (encoded 1)",
+208 |         "threshold": THRESHOLD,
+    -         "selection": {"metric": SELECTION_METRIC, "data": "validation only",
+    -                       "rule": f"best {SELECTION_METRIC}; prefer simpler if within {SIMPLER_MARGIN}",
+    -                       "selected_model": selected_name},
+209 +         "selection": {
+210 +             "metric": SELECTION_METRIC,
+211 +             "data": "validation only",
+212 +             "rule": f"best {SELECTION_METRIC}; prefer simpler if within {SIMPLER_MARGIN}",
+213 +             "selected_model": selected_name,
+214 +         },
+215 |         "model_params": json.loads(selected_row["config"]),
+    -         "validation_metrics": {k: selected_row[k] for k in
+    -                                ["average_precision", "precision", "recall", "f1", "accuracy",
+    -                                 "cm_tn", "cm_fp", "cm_fn", "cm_tp"]},
+216 +         "validation_metrics": {
+217 +             k: selected_row[k]
+218 +             for k in [
+219 +                 "average_precision",
+220 +                 "precision",
+221 +                 "recall",
+222 +                 "f1",
+223 +                 "accuracy",
+224 +                 "cm_tn",
+225 +                 "cm_fp",
+226 +                 "cm_fn",
+227 +                 "cm_tp",
+228 +             ]
+229 +         },
+230 |         "code": git_identity(),
+--------------------------------------------------------------------------------
+235 |     (evidence_dir / "model_metadata.json").write_text(meta_text, encoding="utf-8")
+    -     return {"first_model": first, "comparison": table, "selected": selected_name,
+    -             "metadata": metadata}
+236 +     return {
+237 +         "first_model": first,
+238 +         "comparison": table,
+239 +         "selected": selected_name,
+240 +         "metadata": metadata,
+241 +     }
+    |
+
+unformatted: File would be reformatted
+   --> tests/conftest.py:14:16
+    |
+13  |     "customerID": [f"TEST-{i:02d}" for i in range(16)],
+    -     "tenure": ["1", "2", "5", "8", "12", "3", "24", "36",
+    -                "48", "60", "70", "15", "30", "45", "4", "66"],
+    -     "MonthlyCharges": ["70.5", "85", "95.2", "60", "99.9", "75", "45", "55.5",
+    -                        "25", "20.1", "105", "80", "50", "65", "90", "30"],
+    -     "TotalCharges": ["70.5", "170", "476", "480", "1198.8", "225", "1080", "1998",
+    -                      "1200", "1206", "7350", "1200", "1500", "2925", "360", "1980"],
+    -     "Contract": ["Month-to-month", "Month-to-month", "Month-to-month", "Month-to-month",
+    -                  "Month-to-month", "Month-to-month", "One year", "One year",
+    -                  "Two year", "Two year", "Two year", "One year",
+    -                  "One year", "Two year", "Month-to-month", "Two year"],
+    -     "InternetService": ["Fiber optic", "Fiber optic", "Fiber optic", "DSL",
+    -                         "Fiber optic", "DSL", "DSL", "No",
+    -                         "No", "No", "Fiber optic", "DSL",
+    -                         "DSL", "No", "Fiber optic", "No"],
+    -     "PaymentMethod": ["Electronic check", "Electronic check", "Mailed check",
+    -                       "Electronic check", "Electronic check", "Mailed check",
+    -                       "Bank transfer (automatic)", "Credit card (automatic)",
+    -                       "Bank transfer (automatic)", "Credit card (automatic)",
+    -                       "Credit card (automatic)", "Mailed check",
+    -                       "Bank transfer (automatic)", "Mailed check",
+    -                       "Electronic check", "Credit card (automatic)"],
+14  +     "tenure": [
+15  +         "1",
+16  +         "2",
+17  +         "5",
+18  +         "8",
+19  +         "12",
+20  +         "3",
+21  +         "24",
+22  +         "36",
+23  +         "48",
+24  +         "60",
+25  +         "70",
+26  +         "15",
+27  +         "30",
+28  +         "45",
+29  +         "4",
+30  +         "66",
+31  +     ],
+32  +     "MonthlyCharges": [
+33  +         "70.5",
+34  +         "85",
+35  +         "95.2",
+36  +         "60",
+37  +         "99.9",
+38  +         "75",
+39  +         "45",
+40  +         "55.5",
+41  +         "25",
+42  +         "20.1",
+43  +         "105",
+44  +         "80",
+45  +         "50",
+46  +         "65",
+47  +         "90",
+48  +         "30",
+49  +     ],
+50  +     "TotalCharges": [
+51  +         "70.5",
+52  +         "170",
+53  +         "476",
+54  +         "480",
+55  +         "1198.8",
+56  +         "225",
+57  +         "1080",
+58  +         "1998",
+59  +         "1200",
+60  +         "1206",
+61  +         "7350",
+62  +         "1200",
+63  +         "1500",
+64  +         "2925",
+65  +         "360",
+66  +         "1980",
+67  +     ],
+68  +     "Contract": [
+69  +         "Month-to-month",
+70  +         "Month-to-month",
+71  +         "Month-to-month",
+72  +         "Month-to-month",
+73  +         "Month-to-month",
+74  +         "Month-to-month",
+75  +         "One year",
+76  +         "One year",
+77  +         "Two year",
+78  +         "Two year",
+79  +         "Two year",
+80  +         "One year",
+81  +         "One year",
+82  +         "Two year",
+83  +         "Month-to-month",
+84  +         "Two year",
+85  +     ],
+86  +     "InternetService": [
+87  +         "Fiber optic",
+88  +         "Fiber optic",
+89  +         "Fiber optic",
+90  +         "DSL",
+91  +         "Fiber optic",
+92  +         "DSL",
+93  +         "DSL",
+94  +         "No",
+95  +         "No",
+96  +         "No",
+97  +         "Fiber optic",
+98  +         "DSL",
+99  +         "DSL",
+100 +         "No",
+101 +         "Fiber optic",
+102 +         "No",
+103 +     ],
+104 +     "PaymentMethod": [
+105 +         "Electronic check",
+106 +         "Electronic check",
+107 +         "Mailed check",
+108 +         "Electronic check",
+109 +         "Electronic check",
+110 +         "Mailed check",
+111 +         "Bank transfer (automatic)",
+112 +         "Credit card (automatic)",
+113 +         "Bank transfer (automatic)",
+114 +         "Credit card (automatic)",
+115 +         "Credit card (automatic)",
+116 +         "Mailed check",
+117 +         "Bank transfer (automatic)",
+118 +         "Mailed check",
+119 +         "Electronic check",
+120 +         "Credit card (automatic)",
+121 +     ],
+122 | }
+    |
+
+unformatted: File would be reformatted
+  --> tests/test_input_contract.py:63:36
+   |
+62 |
+   -     pd.testing.assert_series_equal(
+   -         out["customerID"], shuffled["customerID"], check_names=False
+   -     )
+63 +     pd.testing.assert_series_equal(out["customerID"], shuffled["customerID"], check_names=False)
+   |
+
+unformatted: File would be reformatted
+  --> tests/test_pipeline.py:11:25
+   |
+10 | def _toy():
+   -     return pd.DataFrame({
+   -         "tenure": ["1", "20", "40", "5"],
+   -         "MonthlyCharges": ["30.5", "80", "60", "99.9"],
+   -         "TotalCharges": [" ", "1600", "2400", "500"],
+   -         "Contract": ["Month-to-month", "Two year", "One year", "Month-to-month"],
+   -         "InternetService": ["DSL", "Fiber optic", "No", "Fiber optic"],
+   -         "PaymentMethod": ["Electronic check", "Mailed check", "Credit card (automatic)", "Electronic check"],
+   -         TARGET: ["Yes", "No", "No", "Yes"],
+   -     })
+11 +     return pd.DataFrame(
+12 +         {
+13 +             "tenure": ["1", "20", "40", "5"],
+14 +             "MonthlyCharges": ["30.5", "80", "60", "99.9"],
+15 +             "TotalCharges": [" ", "1600", "2400", "500"],
+16 +             "Contract": ["Month-to-month", "Two year", "One year", "Month-to-month"],
+17 +             "InternetService": ["DSL", "Fiber optic", "No", "Fiber optic"],
+18 +             "PaymentMethod": [
+19 +                 "Electronic check",
+20 +                 "Mailed check",
+21 +                 "Credit card (automatic)",
+22 +                 "Electronic check",
+23 +             ],
+24 +             TARGET: ["Yes", "No", "No", "Yes"],
+25 +         }
+26 +     )
+27 |
+   |
+
+14 files would be reformatted, 10 files already formatted

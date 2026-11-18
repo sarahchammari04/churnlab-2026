@@ -191,3 +191,43 @@ Both are ignored by Git but must be kept: restart the server **from the project 
 - The alias `candidate` is a mutable pointer, not a deployment and not a copy: always record the version number with it.
 - The dataset records describe the data (name, digest, schema); they do not store it and are not dataset version control. MLflow's dataset digest is not the CSV SHA-256.
 - The model is serialized with cloudpickle: load only trusted, self-produced artifacts.
+
+## TP04: tests and code quality
+
+### Setup (once per clone)
+
+```sh
+uv sync --locked --no-editable          # includes the dev tools: pytest, pytest-cov, ruff, pre-commit
+uv run pre-commit install               # hooks are local: every clone must run this once
+```
+
+### Commands
+
+| Command | What it detects |
+|---|---|
+| `uv run pytest -q` | Broken behavior: input contract, probabilities, save/reload |
+| `uv run ruff check src scripts tests` | Static problems: syntax errors, unused or unsorted imports, undefined names |
+| `uv run ruff format --check src scripts tests` | Formatting differences only (no behavior) |
+| `uv run pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml` | Which lines of `src/churnlab` the tests execute |
+| `uv run pre-commit run --all-files` | Ruff lint + format and whitespace/YAML/TOML checks, as before a commit |
+
+After changing code in `src/`, reinstall the package before testing (macOS, see note above):
+`uv sync --locked --no-editable --reinstall-package churnlab`.
+
+### Tests
+
+The tests use 16 invented customers (`tests/conftest.py`): no Telco CSV, no network, no MLflow. The fitted-pipeline fixture uses the real `build_pipeline` and runs each test for a logistic regression and a random forest.
+
+| File | Protects |
+|---|---|
+| `tests/test_input_contract.py` | Missing required column → `KeyError`; blank number and unknown category accepted; malformed number rejected; `Churn`/`customerID` never used as inputs |
+| `tests/test_prediction.py` | Probabilities valid (shape, 0–1, rows sum to 1); positive class found via `classes_`; threshold rule |
+| `tests/test_persistence.py` | Saved and reloaded pipeline gives the same predictions and still contains the preprocessing |
+
+### Configuration
+
+- Ruff: `[tool.ruff]` in `pyproject.toml`, rules `E4, E7, E9, F, I`, line length 100.
+- Coverage: `[tool.coverage]` in `pyproject.toml` (reports the installed package as `src/churnlab`).
+- Hooks: `.pre-commit-config.yaml`, pinned `ruff-pre-commit v0.17.5` (same as the Ruff in `uv.lock`) and `pre-commit-hooks v6.0.0`, limited to `src/`, `scripts/`, `tests/` and config files. No training, MLflow or pytest in hooks.
+
+Local hooks can be skipped (`--no-verify`) or not installed: they do not replace the CI checks of TP05.

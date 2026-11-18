@@ -1,0 +1,26 @@
+$ git diff tests/test_persistence.py   # change made by the hook
+diff --git a/tests/test_persistence.py b/tests/test_persistence.py
+index 9631bd3..59c0a25 100644
+--- a/tests/test_persistence.py
++++ b/tests/test_persistence.py
+@@ -6,7 +6,7 @@ import numpy as np
+ 
+ # Test D: serialization preserves behavior, without refitting.
+ def test_reload_preserves_predictions(tmp_path, fitted_pipeline, sample_features):
+-    artifact=tmp_path/'pipeline.joblib'   
++    artifact = tmp_path / "pipeline.joblib"
+     before_proba = fitted_pipeline.predict_proba(sample_features)
+     before_class = fitted_pipeline.predict(sample_features)
+ 
+
+$ git add tests/test_persistence.py && git commit -m "Add persistence tests (save/reload agreement)"
+ruff check...............................................................Passed
+ruff format..............................................................Passed
+trim trailing whitespace.................................................Passed
+fix end of files.........................................................Passed
+check yaml...........................................(no files to check)Skipped
+check toml...........................................(no files to check)Skipped
+[main 01c65d0] Add persistence tests (save/reload agreement)
+ 1 file changed, 29 insertions(+)
+ create mode 100644 tests/test_persistence.py
+exit code: 0

@@ -1,0 +1,16 @@
+______________ coverage: platform darwin, python 3.11.17-final-0 _______________
+
+Name                       Stmts   Miss  Cover   Missing
+--------------------------------------------------------
+src/churnlab/__init__.py       1      0   100%
+src/churnlab/data.py          41      7    83%   34, 39-42, 76-77
+src/churnlab/evaluate.py      12      4    67%   24-27
+src/churnlab/pipeline.py      12      0   100%
+src/churnlab/predict.py        8      0   100%
+src/churnlab/split.py         14     14     0%   3-34
+src/churnlab/tracking.py      72     72     0%   12-183
+src/churnlab/train.py         92     92     0%   3-236
+--------------------------------------------------------
+TOTAL                        252    189    25%
+Coverage XML written to file coverage.xml
+34 passed in 0.47s

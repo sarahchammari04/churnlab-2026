@@ -1,0 +1,11 @@
+scripts/checks.py:6:1: I001 [*] Import block is un-sorted or un-formatted
+scripts/checks.py:68:26: E702 Multiple statements on one line (semicolon)
+scripts/checks.py:69:25: E702 Multiple statements on one line (semicolon)
+scripts/checks.py:87:18: E702 Multiple statements on one line (semicolon)
+scripts/checks.py:89:27: E702 Multiple statements on one line (semicolon)
+scripts/checks.py:97:31: E702 Multiple statements on one line (semicolon)
+scripts/checks.py:101:69: E702 Multiple statements on one line (semicolon)
+scripts/train_tracked.py:10:1: I001 [*] Import block is un-sorted or un-formatted
+src/churnlab/train.py:3:1: I001 [*] Import block is un-sorted or un-formatted
+Found 9 errors.
+[*] 3 fixable with `--fix`.

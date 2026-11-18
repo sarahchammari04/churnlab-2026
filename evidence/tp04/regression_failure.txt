@@ -1,0 +1,30 @@
+        X,
+        handle_unknown="error",
+        force_all_finite=True,
+        warn_on_unknown=False,
+        ignore_category_indices=None,
+    ):
+        X_list, n_samples, n_features = self._check_X(
+            X, force_all_finite=force_all_finite
+        )
+        self._check_feature_names(X, reset=False)
+        self._check_n_features(X, reset=False)
+        X_int = np.zeros((n_samples, n_features), dtype=int)
+        X_mask = np.ones((n_samples, n_features), dtype=bool)
+        columns_with_unknown = []
+        for i in range(n_features):
+            Xi = X_list[i]
+            diff, valid_mask = _check_unknown(Xi, self.categories_[i], return_mask=True)
+            if not np.all(valid_mask):
+                if handle_unknown == "error":
+                    msg = (
+                        "Found unknown categories {0} in column {1}"
+                        " during transform".format(diff, i)
+                    )
+>                   raise ValueError(msg)
+E                   ValueError: Found unknown categories ['Satellite'] in column 1 during transform
+.venv/lib/python3.11/site-packages/sklearn/preprocessing/_encoders.py:214: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_input_contract.py::test_missing_numeric_and_unknown_category_are_accepted[forest]
+FAILED tests/test_input_contract.py::test_missing_numeric_and_unknown_category_are_accepted[logistic]
+2 failed, 17 passed in 0.27s
