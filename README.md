@@ -60,7 +60,8 @@ A file name is not a data version: only the hash identifies the bytes. Never ope
 | `data/raw/` | Original input snapshot and its source metadata, never modified |
 | `data/processed/` | Generated splits (later TPs) |
 | `artifacts/` | Generated model files (later TPs, not committed) |
-| `reports/` | Generated reports (not committed) |
+| `reports/` | Generated reports (not committed, except `tp03_summary.md`) |
+| `mlflow.db`, `mlartifacts/` | Local MLflow backend and artifact stores (TP03, not committed) |
 | `evidence/` | Small, non-sensitive submission evidence |
 | `k8s/`, `pipelines/` | Deployment and orchestration (later TPs) |
 
@@ -133,4 +134,60 @@ On macOS the editable install file (`.pth`) can be marked hidden and ignored by 
 - Probabilities are not calibrated: a score of 0.8 is not a verified 80% risk.
 - Fit durations are indicative, measured on one machine.
 - The test set has not been evaluated yet; it is kept for a single final evaluation.
-- No experiment tracking yet (next TP).
+- Experiment tracking is added in TP03 (see below).
+
+## TP03: experiment tracking and model registry (MLflow)
+
+### Run it
+
+Terminal 1, from the project root (keep it running; UI at http://127.0.0.1:5000):
+
+```sh
+uv run mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.db --artifacts-destination ./mlartifacts
+```
+
+Terminal 2:
+
+```sh
+uv sync --locked --no-editable                 # MLflow 3.x is pinned in uv.lock
+uv run python scripts/tracking_smoke.py        # first connection check: one run, one parameter
+uv run python scripts/train_tracked.py         # one run per TP02 candidate, selection, registration + alias
+uv run python scripts/predict_registered.py --input evidence/tp03/inference_batch.csv --reference evidence/tp03/reference_predictions.csv
+uv run python scripts/tracking_status.py       # runs, registered versions and alias (before/after a restart)
+```
+
+`predict_registered.py` is inference only: it loads `models:/telco-churn@candidate`, applies `churnlab.data.validate_features`, never calls `fit` and imports no training code. It must be run in a new terminal process.
+
+### What each run records
+
+| Category | Content |
+|---|---|
+| Parameters | `model_type`, every actual classifier setting (`clf.*`), `split_seed`, `threshold`, `selection_metric` |
+| Metrics | `val_average_precision` (primary), `val_precision`, `val_recall`, `val_f1`, `val_accuracy`, `fit_seconds` |
+| Tags | `git_commit`, `git_uncommitted_changes`, `data_sha256`, `split_allocation_sha256`, `run_role` |
+| Artifacts | `evaluation/val_confusion_matrix.png`, `provenance.json` (features, class mapping, split reference, evaluation rules, environment) |
+| Dataset inputs | `telco_train` (context `training`), `telco_validation` (context `validation`) |
+| Model | `churn_pipeline`: the complete fitted preprocessing + classifier pipeline (`mlflow.sklearn.log_model`, cloudpickle, input example + signature) |
+
+The split is the TP02 one: `train_tracked.py` stops if the recomputed allocation differs from `evidence/tp02/split_allocation.csv`. The test set is never evaluated.
+
+### Where tracking data live (local, not committed)
+
+| Component | Location | Holds |
+|---|---|---|
+| Backend store | `mlflow.db` (SQLite) | experiments, runs, params, metrics, tags, dataset records, registered models, versions, aliases |
+| Artifact store | `mlartifacts/` | model files (`MLmodel`, `model.pkl`, environment files), confusion matrices, `provenance.json` |
+| Tracking server | `mlflow server` process | tracking API + UI; stopping it deletes nothing |
+
+Both are ignored by Git but must be kept: restart the server **from the project root with the same command** to get everything back.
+
+### Recover the selected model
+
+`evidence/tp03/handover.json` records the source run ID, the logged model URI, the registered version, the alias, the Git commit and the data hash. With the server running, `mlflow.sklearn.load_model("models:/telco-churn@candidate")` (or `models:/telco-churn/<version>` for a fixed version) returns the fitted pipeline without retraining.
+
+### Limitations
+
+- The tracking server is local (`127.0.0.1`): a run ID or a model URI alone is useless on another machine. Sharing needs a team server, or exporting both `mlflow.db` and `mlartifacts/`, plus this repository at the recorded commit, the `uv.lock` environment and the original CSV (checked against its SHA-256).
+- The alias `candidate` is a mutable pointer, not a deployment and not a copy: always record the version number with it.
+- The dataset records describe the data (name, digest, schema); they do not store it and are not dataset version control. MLflow's dataset digest is not the CSV SHA-256.
+- The model is serialized with cloudpickle: load only trusted, self-produced artifacts.

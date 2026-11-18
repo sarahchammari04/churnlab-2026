@@ -1,0 +1,17 @@
+{
+  "selected_model": "random_forest",
+  "source_run_name": "forest-300trees-depth8",
+  "source_run_id": "7db43456b782425ea7b2cc3db086b1b0",
+  "logged_model_uri": "models:/m-7bac82e966864855815d5c34789d1d28",
+  "val_average_precision": 0.6638999967251471,
+  "git_commit": "d51e0ffb69bdf4e743ed9019d99f6cf20fe2b661",
+  "git_uncommitted_changes": false,
+  "data_sha256": "16320c9c1ec72448db59aa0a26a0b95401046bef5d02fd3aeb906448e3055e91",
+  "split_allocation_sha256": "a981175e5fa0ef378bc7cea8b18f5db669157ad01a9f532239e30514bc791f16",
+  "tracking_uri": "http://127.0.0.1:5000",
+  "experiment": "telco-churn-tp03",
+  "registered_model": "telco-churn",
+  "registered_version": "1",
+  "alias": "candidate",
+  "alias_resolves_to": "1"
+}

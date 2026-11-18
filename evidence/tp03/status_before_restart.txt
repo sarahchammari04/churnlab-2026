@@ -1,0 +1,9 @@
+Experiment 'telco-churn-tp03': 5 runs (4 candidate/baseline)
+                          run_id    tags.mlflow.runName  metrics.val_average_precision  metrics.val_precision  metrics.val_recall  metrics.val_f1
+7db43456b782425ea7b2cc3db086b1b0 forest-300trees-depth8                       0.663900               0.653430            0.483957        0.556068
+faae1bdf0aba4e7f8141f143fa0c267f            logistic-C1                       0.647466               0.664430            0.529412        0.589286
+bb180cefda2d430783618894572fd04d     tree-depth5-leaf20                       0.617300               0.635593            0.601604        0.618132
+e9b2059c37594370952b4956de435c78      baseline-majority                       0.265436               0.000000            0.000000        0.000000
+
+Registered model 'telco-churn': versions [1]
+Alias 'candidate' -> version 1 (run 7db43456b782425ea7b2cc3db086b1b0, source models:/m-7bac82e966864855815d5c34789d1d28)

@@ -1,0 +1,24 @@
+models:/telco-churn@candidate -> version 1 (source run 7db43456b782425ea7b2cc3db086b1b0)
+customerID  churn_score  churn_prediction
+1777-JYQPJ     0.466795                 0
+5804-HYIEZ     0.293206                 0
+2969-WGHQO     0.235522                 0
+7354-OIJLX     0.643337                 1
+5201-USSQZ     0.313729                 0
+0017-IUDMW     0.021518                 0
+0599-XNYDO     0.290242                 0
+2146-EGVDT     0.018499                 0
+3400-ESFUW     0.012883                 0
+1699-UOTXU     0.051997                 0
+5813-UECBU     0.344395                 0
+1231-YNDEK     0.050054                 0
+9762-YAQAA     0.115351                 0
+1585-MQSSU     0.179613                 0
+4422-QVIJA     0.109394                 0
+9560-ARGQJ     0.489901                 0
+2923-ARZLG     0.081944                 0
+1047-RNXZV     0.003799                 0
+3957-SQXML     0.019978                 0
+0743-HRVFF     0.087307                 0
+
+Rows: 20 | classes agree: True | max |score diff|: 8.500e-17 (tolerance 1e-09) -> AGREEMENT OK
