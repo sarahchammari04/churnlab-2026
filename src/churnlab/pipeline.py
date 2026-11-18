@@ -24,23 +24,31 @@ PREPROCESSING = {
 
 
 def build_preprocessor() -> ColumnTransformer:
-    numeric = Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
-        ("scaler", StandardScaler()),
-    ])
-    categorical = Pipeline([
-        ("imputer", SimpleImputer(strategy="most_frequent")),
-        ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
-    ])
-    return ColumnTransformer([
-        ("num", numeric, NUMERIC_FEATURES),
-        ("cat", categorical, CATEGORICAL_FEATURES),
-    ])
+    numeric = Pipeline(
+        [
+            ("imputer", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler()),
+        ]
+    )
+    categorical = Pipeline(
+        [
+            ("imputer", SimpleImputer(strategy="most_frequent")),
+            ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+        ]
+    )
+    return ColumnTransformer(
+        [
+            ("num", numeric, NUMERIC_FEATURES),
+            ("cat", categorical, CATEGORICAL_FEATURES),
+        ]
+    )
 
 
 def build_pipeline(classifier) -> Pipeline:
     """Fresh preprocessing + the given (unfitted) classifier."""
-    return Pipeline([
-        ("preprocessor", build_preprocessor()),
-        ("classifier", classifier),
-    ])
+    return Pipeline(
+        [
+            ("preprocessor", build_preprocessor()),
+            ("classifier", classifier),
+        ]
+    )

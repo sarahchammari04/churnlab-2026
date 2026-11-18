@@ -9,10 +9,7 @@ record = {
     "python": sys.version,
     "platform": platform.platform(),
     "uv": subprocess.check_output(["uv", "--version"], text=True).strip(),
-    "packages": {
-        name: version(name)
-        for name in ["churnlab", "pandas", "numpy", "scikit-learn"]
-    },
+    "packages": {name: version(name) for name in ["churnlab", "pandas", "numpy", "scikit-learn"]},
 }
 
 out = Path("evidence/tp01/environment.json")

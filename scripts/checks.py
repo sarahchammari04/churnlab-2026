@@ -14,7 +14,12 @@ import numpy as np
 import pandas as pd
 
 from churnlab.data import (
-    CATEGORICAL_FEATURES, FEATURES, ID_COLUMN, NUMERIC_FEATURES, load_raw, validate_features,
+    CATEGORICAL_FEATURES,
+    FEATURES,
+    ID_COLUMN,
+    NUMERIC_FEATURES,
+    load_raw,
+    validate_features,
 )
 
 EVIDENCE = Path("evidence/tp02")
@@ -64,9 +69,13 @@ results["3_predict_does_not_refit"] = {
 }
 
 # 4. Documented policies: missing numeric value and unseen category
-base = raw[raw[ID_COLUMN].isin(groups["valid"])][FEATURES].head(1).astype(str).reset_index(drop=True)
-missing_num = base.copy(); missing_num.loc[0, "TotalCharges"] = " "
-unseen_cat = base.copy(); unseen_cat.loc[0, "InternetService"] = "Satellite"
+base = (
+    raw[raw[ID_COLUMN].isin(groups["valid"])][FEATURES].head(1).astype(str).reset_index(drop=True)
+)
+missing_num = base.copy()
+missing_num.loc[0, "TotalCharges"] = " "
+unseen_cat = base.copy()
+unseen_cat.loc[0, "InternetService"] = "Satellite"
 pre = pipe.named_steps["preprocessor"]
 enc = pre.named_transformers_["cat"].named_steps["encoder"]
 inet_idx = CATEGORICAL_FEATURES.index("InternetService")
@@ -75,18 +84,23 @@ width = len(enc.categories_[inet_idx])
 row_missing = pre.transform(validate_features(missing_num))[0]
 row_unseen = pre.transform(validate_features(unseen_cat))[0]
 results["4_policies"] = {
-    "missing_TotalCharges_imputed_to_training_median": bool(np.isclose(
-        row_missing[2] * num.named_steps["scaler"].scale_[2] + scaler_mean[2], imputer_stats[2])),
+    "missing_TotalCharges_imputed_to_training_median": bool(
+        np.isclose(
+            row_missing[2] * num.named_steps["scaler"].scale_[2] + scaler_mean[2], imputer_stats[2]
+        )
+    ),
     "missing_TotalCharges_score": float(pipe.predict_proba(validate_features(missing_num))[0, 1]),
-    "unseen_category_encoded_as_zeros": bool(np.all(row_unseen[start:start + width] == 0)),
+    "unseen_category_encoded_as_zeros": bool(np.all(row_unseen[start : start + width] == 0)),
     "unseen_category_score": float(pipe.predict_proba(validate_features(unseen_cat))[0, 1]),
     "note": "Handling an unseen category only avoids a crash; it does not make the prediction reliable.",
 }
 
 # 4b. Malformed non-blank numeric text must fail
-bad = base.copy(); bad.loc[0, "MonthlyCharges"] = "abc"
+bad = base.copy()
+bad.loc[0, "MonthlyCharges"] = "abc"
 try:
-    validate_features(bad); results["4b_malformed_numeric"] = "NOT DETECTED"
+    validate_features(bad)
+    results["4b_malformed_numeric"] = "NOT DETECTED"
 except (ValueError, TypeError) as e:
     results["4b_malformed_numeric"] = f"raised {type(e).__name__}"
 
@@ -94,19 +108,31 @@ except (ValueError, TypeError) as e:
 dropped = base.drop(columns=["Contract"])
 out5 = {}
 try:
-    validate_features(dropped); out5["boundary"] = "NOT DETECTED"
+    validate_features(dropped)
+    out5["boundary"] = "NOT DETECTED"
 except KeyError as e:
     out5["boundary"] = f"raised KeyError: {e}"
 try:
-    pipe.predict(validate_features(base).drop(columns=["Contract"])); out5["pipeline"] = "NOT DETECTED"
+    pipe.predict(validate_features(base).drop(columns=["Contract"]))
+    out5["pipeline"] = "NOT DETECTED"
 except (KeyError, ValueError) as e:
     out5["pipeline"] = f"raised {type(e).__name__}"
 results["5_missing_feature"] = out5
 
 # 6. Reload in a FRESH process (scripts/predict.py) and compare with the original scores
 pred_path = Path("reports/reload_check_predictions.csv")
-subprocess.run([sys.executable, "scripts/predict.py", "--input", str(EVIDENCE / "inference_batch.csv"),
-                "--output", str(pred_path)], check=True, capture_output=True)
+subprocess.run(
+    [
+        sys.executable,
+        "scripts/predict.py",
+        "--input",
+        str(EVIDENCE / "inference_batch.csv"),
+        "--output",
+        str(pred_path),
+    ],
+    check=True,
+    capture_output=True,
+)
 ref = pd.read_csv(EVIDENCE / "reference_predictions.csv")
 new = pd.read_csv(pred_path)
 max_diff = float(np.max(np.abs(ref["score"].to_numpy() - new["churn_score"].to_numpy())))
@@ -116,9 +142,12 @@ results["6_fresh_process_reload"] = {
     "max_abs_score_difference": max_diff,
     "tolerance": TOL,
     "scores_agree": max_diff <= TOL,
-    "classes_agree": bool((ref["prediction"].to_numpy() == new["churn_prediction"].to_numpy()).all()),
+    "classes_agree": bool(
+        (ref["prediction"].to_numpy() == new["churn_prediction"].to_numpy()).all()
+    ),
     "inference_script_calls_fit": ".fit(" in predict_src,
-    "inference_input_contains_target": "Churn" in pd.read_csv(EVIDENCE / "inference_batch.csv").columns,
+    "inference_input_contains_target": "Churn"
+    in pd.read_csv(EVIDENCE / "inference_batch.csv").columns,
 }
 
 (EVIDENCE / "checks.json").write_text(json.dumps(results, indent=2), encoding="utf-8")

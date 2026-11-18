@@ -1,0 +1,22 @@
+# Lightweight checks run before each commit (install once per clone: uv run pre-commit install).
+# Scope: project code and config only. No .venv, MLflow storage, data or generated evidence.
+# No training, no MLflow server and no pytest here: tests run manually now, in CI in TP05.
+files: ^(src/|scripts/|tests/|pyproject\.toml$|\.pre-commit-config\.yaml$)
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.5  # same version as the ruff dev dependency in uv.lock
+    hooks:
+      - id: ruff-check  # lint first (may fix imports)...
+        args: [--fix]
+        types_or: [python, pyi]
+      - id: ruff-format  # ...then format
+        types_or: [python, pyi]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml

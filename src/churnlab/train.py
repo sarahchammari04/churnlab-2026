@@ -17,11 +17,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 
 from churnlab.data import (
+    CATEGORICAL_FEATURES,
     EXPECTED_SHA256,
     FEATURES,
     ID_COLUMN,
     NUMERIC_FEATURES,
-    CATEGORICAL_FEATURES,
     POSITIVE_LABEL,
     RAW_CSV,
     SOURCE_URL,
@@ -59,8 +59,14 @@ def candidate_models(seed: int) -> dict:
 
 def git_identity() -> dict:
     try:
-        commit = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL).strip()
-        dirty = bool(subprocess.check_output(["git", "status", "--porcelain"], text=True, stderr=subprocess.DEVNULL).strip())
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL
+        ).strip()
+        dirty = bool(
+            subprocess.check_output(
+                ["git", "status", "--porcelain"], text=True, stderr=subprocess.DEVNULL
+            ).strip()
+        )
     except (OSError, subprocess.CalledProcessError):
         commit, dirty = None, None
     return {"commit": commit, "uncommitted_changes": dirty}
@@ -82,8 +88,11 @@ def first_model(train_df, valid_df) -> dict:
     X_train = train_df[feats].astype("float64")
     X_valid = valid_df[feats].astype("float64")
     y_train, y_valid = encode_target(train_df[TARGET]), encode_target(valid_df[TARGET])
-    out = {"features": feats, "positive_class": "Churn = Yes (1)",
-           "confusion_matrix_layout": "rows = true [0, 1], cols = predicted [0, 1]"}
+    out = {
+        "features": feats,
+        "positive_class": "Churn = Yes (1)",
+        "confusion_matrix_layout": "rows = true [0, 1], cols = predicted [0, 1]",
+    }
     for name, clf in [
         ("majority_baseline", DummyClassifier(strategy="most_frequent")),
         ("logistic_regression", LogisticRegression(max_iter=1000)),
@@ -103,8 +112,11 @@ def select(results: list[dict]) -> str:
     raise RuntimeError("no candidate selected")
 
 
-def run(seed: int = SPLIT_SEED, artifacts_dir: Path = Path("artifacts"),
-        evidence_dir: Path = Path("evidence/tp02")) -> dict:
+def run(
+    seed: int = SPLIT_SEED,
+    artifacts_dir: Path = Path("artifacts"),
+    evidence_dir: Path = Path("evidence/tp02"),
+) -> dict:
     artifacts_dir.mkdir(parents=True, exist_ok=True)
     evidence_dir.mkdir(parents=True, exist_ok=True)
 
@@ -133,18 +145,22 @@ def run(seed: int = SPLIT_SEED, artifacts_dir: Path = Path("artifacts"),
         fit_seconds = time.perf_counter() - start
         metrics = evaluate(pipe, X_valid, y_valid)
         cm = metrics.pop("confusion_matrix")
-        results.append({
-            "model": name,
-            **metrics,
-            **{f"cm_{k}": v for k, v in cm.items()},
-            "fit_seconds": round(fit_seconds, 3),
-            "config": json.dumps({k: v for k, v in clf.get_params().items()}, default=str),
-        })
+        results.append(
+            {
+                "model": name,
+                **metrics,
+                **{f"cm_{k}": v for k, v in cm.items()},
+                "fit_seconds": round(fit_seconds, 3),
+                "config": json.dumps({k: v for k, v in clf.get_params().items()}, default=str),
+            }
+        )
         fitted[name] = pipe
 
     table = pd.DataFrame(results)
     table.to_csv(evidence_dir / "comparison.csv", index=False)
-    (evidence_dir / "comparison.json").write_text(table.to_json(orient="records", indent=2), encoding="utf-8")
+    (evidence_dir / "comparison.json").write_text(
+        table.to_json(orient="records", indent=2), encoding="utf-8"
+    )
 
     selected_name = select(results)
     selected = fitted[selected_name]
@@ -154,11 +170,15 @@ def run(seed: int = SPLIT_SEED, artifacts_dir: Path = Path("artifacts"),
     # Reference batch for the fresh-process reload check (features only, raw text form).
     batch = valid_df[[ID_COLUMN] + FEATURES].head(20)
     batch.to_csv(evidence_dir / "inference_batch.csv", index=False)
-    ref = pd.DataFrame({
-        ID_COLUMN: batch[ID_COLUMN].values,
-        "score": selected.predict_proba(validate_features(batch))[:, list(selected.classes_).index(1)],
-        "prediction": selected.predict(validate_features(batch)),
-    })
+    ref = pd.DataFrame(
+        {
+            ID_COLUMN: batch[ID_COLUMN].values,
+            "score": selected.predict_proba(validate_features(batch))[
+                :, list(selected.classes_).index(1)
+            ],
+            "prediction": selected.predict(validate_features(batch)),
+        }
+    )
     ref.to_csv(evidence_dir / "reference_predictions.csv", index=False)
 
     selected_row = next(r for r in results if r["model"] == selected_name)
@@ -168,31 +188,54 @@ def run(seed: int = SPLIT_SEED, artifacts_dir: Path = Path("artifacts"),
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "source": {"url": SOURCE_URL, "file": RAW_CSV.as_posix(), "sha256": EXPECTED_SHA256},
         "split": {
-            "seed": seed, "ratios": "60/20/20 stratified on Churn",
+            "seed": seed,
+            "ratios": "60/20/20 stratified on Churn",
             "sizes": {"train": len(train_df), "valid": len(valid_df), "test": len(test_df)},
             "allocation_file": alloc_path.as_posix(),
             "allocation_sha256": sha256_of(alloc_path),
             "test_set": "reserved, not used for training or selection",
         },
-        "features": {"numeric": NUMERIC_FEATURES, "categorical": CATEGORICAL_FEATURES,
-                     "identifier_not_used": ID_COLUMN, "target": TARGET},
+        "features": {
+            "numeric": NUMERIC_FEATURES,
+            "categorical": CATEGORICAL_FEATURES,
+            "identifier_not_used": ID_COLUMN,
+            "target": TARGET,
+        },
         "input_schema": {c: "float (blank allowed -> NaN)" for c in NUMERIC_FEATURES}
-                        | {c: "string category" for c in CATEGORICAL_FEATURES},
+        | {c: "string category" for c in CATEGORICAL_FEATURES},
         "preprocessing": PREPROCESSING,
         "positive_class": f"{TARGET} = {POSITIVE_LABEL} (encoded 1)",
         "threshold": THRESHOLD,
-        "selection": {"metric": SELECTION_METRIC, "data": "validation only",
-                      "rule": f"best {SELECTION_METRIC}; prefer simpler if within {SIMPLER_MARGIN}",
-                      "selected_model": selected_name},
+        "selection": {
+            "metric": SELECTION_METRIC,
+            "data": "validation only",
+            "rule": f"best {SELECTION_METRIC}; prefer simpler if within {SIMPLER_MARGIN}",
+            "selected_model": selected_name,
+        },
         "model_params": json.loads(selected_row["config"]),
-        "validation_metrics": {k: selected_row[k] for k in
-                               ["average_precision", "precision", "recall", "f1", "accuracy",
-                                "cm_tn", "cm_fp", "cm_fn", "cm_tp"]},
+        "validation_metrics": {
+            k: selected_row[k]
+            for k in [
+                "average_precision",
+                "precision",
+                "recall",
+                "f1",
+                "accuracy",
+                "cm_tn",
+                "cm_fp",
+                "cm_fn",
+                "cm_tp",
+            ]
+        },
         "code": git_identity(),
         "environment": environment_identity(),
     }
     meta_text = json.dumps(metadata, indent=2)
     (artifacts_dir / "churn_pipeline.metadata.json").write_text(meta_text, encoding="utf-8")
     (evidence_dir / "model_metadata.json").write_text(meta_text, encoding="utf-8")
-    return {"first_model": first, "comparison": table, "selected": selected_name,
-            "metadata": metadata}
+    return {
+        "first_model": first,
+        "comparison": table,
+        "selected": selected_name,
+        "metadata": metadata,
+    }

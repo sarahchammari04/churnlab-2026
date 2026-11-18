@@ -40,11 +40,13 @@ pipeline = mlflow.sklearn.load_model(model_uri)  # trusted, self-produced artifa
 raw = pd.read_csv(args.input, dtype=str, keep_default_na=False)
 X = validate_features(raw)  # same stateless boundary rules as TP02
 scores = pipeline.predict_proba(X)[:, list(pipeline.classes_).index(1)]
-out = pd.DataFrame({
-    ID_COLUMN: raw[ID_COLUMN] if ID_COLUMN in raw else range(len(raw)),
-    "churn_score": scores,
-    "churn_prediction": (scores >= args.threshold).astype(int),
-})
+out = pd.DataFrame(
+    {
+        ID_COLUMN: raw[ID_COLUMN] if ID_COLUMN in raw else range(len(raw)),
+        "churn_score": scores,
+        "churn_prediction": (scores >= args.threshold).astype(int),
+    }
+)
 args.output.parent.mkdir(parents=True, exist_ok=True)
 out.to_csv(args.output, index=False)
 print(out.to_string(index=False))
@@ -54,6 +56,8 @@ if args.reference:
     max_diff = float(np.max(np.abs(ref["score"].to_numpy() - out["churn_score"].to_numpy())))
     classes_agree = bool((ref["prediction"].to_numpy() == out["churn_prediction"].to_numpy()).all())
     ok = classes_agree and max_diff <= args.tol
-    print(f"\nRows: {len(ref)} | classes agree: {classes_agree} | "
-          f"max |score diff|: {max_diff:.3e} (tolerance {args.tol:g}) -> {'AGREEMENT OK' if ok else 'MISMATCH'}")
+    print(
+        f"\nRows: {len(ref)} | classes agree: {classes_agree} | "
+        f"max |score diff|: {max_diff:.3e} (tolerance {args.tol:g}) -> {'AGREEMENT OK' if ok else 'MISMATCH'}"
+    )
     sys.exit(0 if ok else 1)

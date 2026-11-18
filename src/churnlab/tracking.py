@@ -50,8 +50,12 @@ def dataset_records(train_df: pd.DataFrame, valid_df: pd.DataFrame, source: str)
     Logging these records does not store the DataFrames themselves.
     """
     cols = FEATURES + [TARGET]
-    train = mlflow.data.from_pandas(train_df[cols], source=source, name="telco_train", targets=TARGET)
-    valid = mlflow.data.from_pandas(valid_df[cols], source=source, name="telco_validation", targets=TARGET)
+    train = mlflow.data.from_pandas(
+        train_df[cols], source=source, name="telco_train", targets=TARGET
+    )
+    valid = mlflow.data.from_pandas(
+        valid_df[cols], source=source, name="telco_validation", targets=TARGET
+    )
     return train, valid
 
 
@@ -59,7 +63,9 @@ def _confusion_matrix_png(cm: dict, title: str, out_dir: Path) -> Path:
     # Class order: rows = true [0, 1], columns = predicted [0, 1].
     matrix = np.array([[cm["tn"], cm["fp"]], [cm["fn"], cm["tp"]]])
     fig, ax = plt.subplots(figsize=(4.2, 4))
-    ConfusionMatrixDisplay(matrix, display_labels=["0: No churn", "1: Churn"]).plot(ax=ax, colorbar=False)
+    ConfusionMatrixDisplay(matrix, display_labels=["0: No churn", "1: Churn"]).plot(
+        ax=ax, colorbar=False
+    )
     ax.set_title(title, fontsize=10)
     fig.tight_layout()
     path = out_dir / "val_confusion_matrix.png"
@@ -70,7 +76,13 @@ def _confusion_matrix_png(cm: dict, title: str, out_dir: Path) -> Path:
 
 def _param_value(value):
     # MLflow params are strings: None and objects are written explicitly.
-    return "None" if value is None else value if isinstance(value, (int, float, str, bool)) else str(value)
+    return (
+        "None"
+        if value is None
+        else value
+        if isinstance(value, (int, float, str, bool))
+        else str(value)
+    )
 
 
 def track_candidate(run_name: str, model_key: str, classifier, data: dict, context: dict) -> dict:
@@ -83,14 +95,16 @@ def track_candidate(run_name: str, model_key: str, classifier, data: dict, conte
     actual_params = classifier.get_params()  # settings actually passed, not intended ones
 
     with mlflow.start_run(run_name=run_name) as run:
-        mlflow.log_params({
-            "model_key": model_key,
-            "model_type": type(classifier).__name__,
-            "split_seed": context["seed"],
-            "threshold": THRESHOLD,
-            "selection_metric": "val_average_precision",
-            **{f"clf.{k}": _param_value(v) for k, v in actual_params.items()},
-        })
+        mlflow.log_params(
+            {
+                "model_key": model_key,
+                "model_type": type(classifier).__name__,
+                "split_seed": context["seed"],
+                "threshold": THRESHOLD,
+                "selection_metric": "val_average_precision",
+                **{f"clf.{k}": _param_value(v) for k, v in actual_params.items()},
+            }
+        )
         mlflow.set_tags({**context["tags"], "run_role": context["run_role"]})
 
         # Dataset records are attached inside the active run, with distinct contexts.
@@ -108,14 +122,24 @@ def track_candidate(run_name: str, model_key: str, classifier, data: dict, conte
         mlflow.log_metrics({**val_metrics, "fit_seconds": fit_seconds})
 
         with tempfile.TemporaryDirectory() as tmp:
-            png = _confusion_matrix_png(cm, f"{run_name} - validation (threshold {THRESHOLD})", Path(tmp))
+            png = _confusion_matrix_png(
+                cm, f"{run_name} - validation (threshold {THRESHOLD})", Path(tmp)
+            )
             mlflow.log_artifact(str(png), artifact_path="evaluation")
         mlflow.log_dict(
-            {**context["provenance"],
-             "candidate": {"run_name": run_name, "model_key": model_key,
-                           "model_type": type(classifier).__name__,
-                           "params": {k: _param_value(v) for k, v in actual_params.items()}},
-             "validation_confusion_matrix": {**cm, "layout": "rows = true [0, 1], cols = predicted [0, 1]"}},
+            {
+                **context["provenance"],
+                "candidate": {
+                    "run_name": run_name,
+                    "model_key": model_key,
+                    "model_type": type(classifier).__name__,
+                    "params": {k: _param_value(v) for k, v in actual_params.items()},
+                },
+                "validation_confusion_matrix": {
+                    **cm,
+                    "layout": "rows = true [0, 1], cols = predicted [0, 1]",
+                },
+            },
             "provenance.json",
         )
 
@@ -139,8 +163,12 @@ def track_candidate(run_name: str, model_key: str, classifier, data: dict, conte
     }
 
 
-def register_selected(model_uri: str, name: str = REGISTERED_MODEL, alias: str = ALIAS,
-                      version_tags: dict | None = None):
+def register_selected(
+    model_uri: str,
+    name: str = REGISTERED_MODEL,
+    alias: str = ALIAS,
+    version_tags: dict | None = None,
+):
     """Register a logged model and point the alias at the returned version."""
     version = mlflow.register_model(model_uri, name)
     client = mlflow.MlflowClient()

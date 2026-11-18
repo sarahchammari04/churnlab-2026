@@ -5,6 +5,11 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
 
 # Secrets
 .env
@@ -17,6 +22,7 @@ artifacts/*
 !artifacts/.gitkeep
 reports/*
 !reports/tp03_summary.md
+!reports/tp04_summary.md
 
 # MLflow local tracking storage (kept on disk, not committed)
 mlflow.db

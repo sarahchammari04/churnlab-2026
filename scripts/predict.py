@@ -10,7 +10,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
-from churnlab.data import ID_COLUMN, validate_features
+from churnlab.predict import score_batch
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", type=Path, default=Path("artifacts/churn_pipeline.joblib"))
@@ -21,13 +21,7 @@ args = parser.parse_args()
 
 pipeline = joblib.load(args.model)  # trusted artifact only
 raw = pd.read_csv(args.input, dtype=str, keep_default_na=False)
-X = validate_features(raw)  # explicit boundary: schema + types
-scores = pipeline.predict_proba(X)[:, list(pipeline.classes_).index(1)]
-out = pd.DataFrame({
-    ID_COLUMN: raw[ID_COLUMN] if ID_COLUMN in raw else range(len(raw)),
-    "churn_score": scores,
-    "churn_prediction": (scores >= args.threshold).astype(int),
-})
+out = score_batch(pipeline, raw, args.threshold)  # explicit boundary: schema + types
 args.output.parent.mkdir(parents=True, exist_ok=True)
 out.to_csv(args.output, index=False)
 print(out.to_string(index=False))

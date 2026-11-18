@@ -18,19 +18,28 @@ args = parser.parse_args()
 mlflow.set_tracking_uri(args.tracking_uri)
 client = mlflow.MlflowClient()
 
-runs = mlflow.search_runs(experiment_names=[EXPERIMENT_NAME],
-                          order_by=["metrics.val_average_precision DESC"])
+runs = mlflow.search_runs(
+    experiment_names=[EXPERIMENT_NAME], order_by=["metrics.val_average_precision DESC"]
+)
 tracked = runs[runs["tags.run_role"].isin(["candidate", "baseline"])]
 print(f"Experiment '{EXPERIMENT_NAME}': {len(runs)} runs ({len(tracked)} candidate/baseline)")
 
-cols = ["run_id", "tags.mlflow.runName", "metrics.val_average_precision",
-        "metrics.val_precision", "metrics.val_recall", "metrics.val_f1"]
+cols = [
+    "run_id",
+    "tags.mlflow.runName",
+    "metrics.val_average_precision",
+    "metrics.val_precision",
+    "metrics.val_recall",
+    "metrics.val_f1",
+]
 print(tracked[cols].to_string(index=False))
 if args.export:
     args.export.parent.mkdir(parents=True, exist_ok=True)
     tracked[cols].to_csv(args.export, index=False)
 
 versions = client.search_model_versions(f"name='{REGISTERED_MODEL}'")
-print(f"\nRegistered model '{REGISTERED_MODEL}': versions {sorted(int(v.version) for v in versions)}")
+print(
+    f"\nRegistered model '{REGISTERED_MODEL}': versions {sorted(int(v.version) for v in versions)}"
+)
 mv = client.get_model_version_by_alias(REGISTERED_MODEL, ALIAS)
 print(f"Alias '{ALIAS}' -> version {mv.version} (run {mv.run_id}, source {mv.source})")

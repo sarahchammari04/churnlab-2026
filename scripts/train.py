@@ -19,11 +19,24 @@ fm = out["first_model"]
 print("== Milestone 1: tenure + MonthlyCharges (validation) ==")
 for name in ["majority_baseline", "logistic_regression"]:
     m = fm[name]
-    print(f"{name:22s} accuracy={m['accuracy']:.3f} recall={m['recall']:.3f} cm={m['confusion_matrix']}")
+    print(
+        f"{name:22s} accuracy={m['accuracy']:.3f} recall={m['recall']:.3f} cm={m['confusion_matrix']}"
+    )
 
 print("\n== Comparison: six features, validation ==")
-cols = ["model", "average_precision", "precision", "recall", "f1", "accuracy",
-        "cm_tn", "cm_fp", "cm_fn", "cm_tp", "fit_seconds"]
+cols = [
+    "model",
+    "average_precision",
+    "precision",
+    "recall",
+    "f1",
+    "accuracy",
+    "cm_tn",
+    "cm_fp",
+    "cm_fn",
+    "cm_tp",
+    "fit_seconds",
+]
 with pd.option_context("display.width", 200, "display.float_format", "{:.3f}".format):
     print(out["comparison"][cols].to_string(index=False))
 print(f"\nSelected: {out['selected']} -> {out['metadata']['artifact']}")
