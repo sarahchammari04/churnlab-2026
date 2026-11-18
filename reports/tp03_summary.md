@@ -3,6 +3,7 @@
 **Students:** Sarah Chammari and Shaima Kraiem
 **MLflow:** 3.18.0 (pinned in `uv.lock`) · **Experiment:** `telco-churn-tp03` · **Tracking server:** local, `http://127.0.0.1:5000`
 **Code commit used for the runs:** `d51e0ffb69bdf4e743ed9019d99f6cf20fe2b661` (no uncommitted changes at run time)
+**Detailed answers to every TP question:** `evidence/tp03/answers.md`
 
 ## 1. Candidate comparison
 
