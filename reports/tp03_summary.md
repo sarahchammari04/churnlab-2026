@@ -25,6 +25,15 @@ Same six features, same TP02 customer allocation (seed 42, 60/20/20), same evalu
 
 The run page shows the `clf.*` parameters, `split_seed`, `threshold`, the `val_*` metrics, the tags `git_commit` / `data_sha256` / `split_allocation_sha256`, the artifacts `evaluation/val_confusion_matrix.png` and `provenance.json`, and the dataset records `telco_train` (context `training`) and `telco_validation` (context `validation`).
 
+The UI shows the second dataset behind "+1". Both records, read from the tracking server (`evidence/tp03/selected_run_datasets.txt`):
+
+| Dataset | Context | MLflow digest | Rows | Columns |
+|---|---|---|---:|---|
+| `telco_train` | training | `6834438a` | 4,225 | six features + `Churn` |
+| `telco_validation` | validation | `4fb2e5e6` | 1,409 | six features + `Churn` |
+
+These digests describe the split DataFrames; they are not the SHA-256 of the original CSV and they do not store the data.
+
 Input schema stored with the model (inferred from `X_train.head(3)`): `tenure`, `MonthlyCharges`, `TotalCharges` as `double`; `Contract`, `InternetService`, `PaymentMethod` as `string`; output `long` (class 0/1). It describes the raw input columns expected by the pipeline, not the internal one-hot encoding. Note: the schema marks the columns as required, while `validate_features` allows a blank `TotalCharges` (it becomes NaN and is imputed). This only matters for pyfunc schema enforcement; `mlflow.sklearn.load_model` returns the plain scikit-learn pipeline.
 
 ## 3. Registry

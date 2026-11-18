@@ -1,0 +1,3 @@
+Run 7db43456b782425ea7b2cc3db086b1b0 (forest-300trees-depth8) - dataset inputs:
+- telco_train | context=training | digest=6834438a | rows=4225 | columns=['tenure', 'MonthlyCharges', 'TotalCharges', 'Contract', 'InternetService', 'PaymentMethod', 'Churn']
+- telco_validation | context=validation | digest=4fb2e5e6 | rows=1409 | columns=['tenure', 'MonthlyCharges', 'TotalCharges', 'Contract', 'InternetService', 'PaymentMethod', 'Churn']
