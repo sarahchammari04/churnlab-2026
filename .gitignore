@@ -15,7 +15,13 @@ data/processed/*
 !data/processed/.gitkeep
 artifacts/*
 !artifacts/.gitkeep
-reports/
+reports/*
+!reports/tp03_summary.md
+
+# MLflow local tracking storage (kept on disk, not committed)
+mlflow.db
+mlflow.db-*
+mlartifacts/
 mlruns/
 
 # OS / editors
